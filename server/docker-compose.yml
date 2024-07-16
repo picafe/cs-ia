@@ -1,0 +1,22 @@
+version: "3"
+services:
+  pgdb:
+    image: docker.io/bitnami/postgresql:latest
+    volumes:
+      - 'db_data:/bitnami/postgres'
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRESQL_USERNAME: ${DB_USER}
+      POSTGRESQL_PASSWORD: ${DB_PASSWORD}
+      POSTGRESQL_DATABASE: server
+    healthcheck:
+      test: ['CMD', 'pg_isready -d server -h localhost -p 5432 -U ${DB_USER}']
+      interval: 15s
+      timeout: 5s
+      retries: 6
+
+volumes:
+  db_data:
+    driver: local
