@@ -1,0 +1,83 @@
+import { Avatar, Container, Group, Menu, Tabs, UnstyledButton, Text, useComputedColorScheme, useMantineColorScheme, ActionIcon } from "@mantine/core";
+import Logo from "../icons/Logo";
+import { IconChevronDown, IconHome, IconLogout, IconLogs, IconMoon, IconSettings, IconSun } from "@tabler/icons-react";
+import { Link } from "react-router-dom";
+
+
+export default function Navbar() {
+    const { setColorScheme } = useMantineColorScheme();
+    const computedColorScheme = useComputedColorScheme('light', { getInitialValueInEffect: true });
+    const user = {
+        firstName: 'Test',
+        lastName: 'User'
+    };
+    return (
+        <div>
+            <Container fluid>
+                <Group justify='space-between'>
+                    <Link to="/" className="no-underline text-black dark:text-gray-100">
+                        <Group gap={4}>
+                            <Logo />
+                            <Text size="xl" fw={700}> LearnLog </Text>
+                        </Group>
+                    </Link>
+
+
+                    <Group gap="sm">
+                        <Menu
+                            width={160}
+                            position="bottom-end"
+                            transitionProps={{ transition: 'rotate-left', duration: 150 }}
+                            withArrow
+                        >
+                            <Menu.Target>
+                                <UnstyledButton
+                                >
+                                    <Group gap={6}>
+                                        <Avatar color="cyan" radius="xl" size={24}>{user.firstName.charAt(0) + user.lastName.charAt(0)}</Avatar>
+                                        <Text fw={500} visibleFrom="sm"  size="sm" lh={1} mr={2}>
+                                            {user.firstName + " " + user.lastName}
+                                        </Text>
+                                        <IconChevronDown className="size-3" stroke={1.5} />
+                                    </Group>
+                                </UnstyledButton>
+                            </Menu.Target>
+                            <Menu.Dropdown>
+                                <Menu.Item leftSection={<IconSettings className="size-4" stroke={1.5} />}>
+                                    Settings
+                                </Menu.Item>
+                                <Menu.Item leftSection={<IconLogout className="size-4 stroke-red-600" stroke={1.5} />}>
+                                    Logout
+                                </Menu.Item>
+                            </Menu.Dropdown>
+                        </Menu>
+                        <ActionIcon
+                            onClick={() => setColorScheme(computedColorScheme === 'light' ? 'dark' : 'light')}
+                            variant="default"
+                            size="md"
+                            aria-label="Toggle color scheme"
+                        >
+                            <IconSun className="hidden dark:block size-5" stroke={1.5} />
+                            <IconMoon className="block dark:hidden size-5" stroke={1.5} />
+                        </ActionIcon>
+                    </Group>
+                </Group>
+            </Container>
+            <Container fluid className="justify-center">
+                <Tabs
+                    defaultValue="Feed"
+                >
+                    <Tabs.List style={{ justifyContent: "center" }}>
+                        <Tabs.Tab value="Feed" leftSection={<IconHome className="size-3" />}>
+                            Feed
+                        </Tabs.Tab>
+                        <Tabs.Tab value="Logging" leftSection={<IconLogs className="size-3" />}>
+                            Logging
+                        </Tabs.Tab>
+
+                    </Tabs.List>
+                </Tabs>
+            </Container>
+        </div>
+    )
+}
