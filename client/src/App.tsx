@@ -7,15 +7,15 @@ function App() {
 
   return (
     <>
-      <div className="w-full h-full">
-        
-        <div className='px-auto sm:px-8 lg:px-10 sm:mx-auto mb-10 antialiased sm:max-w-2xl md:max-w-6xl overflow-hidden md:overflow-visible'>
+      <div className='min-h-screen px-auto sm:px-8 lg:px-10 sm:mx-auto p-8 antialiased sm:max-w-2xl md:max-w-6xl overflow-hidden md:overflow-visible'>
         <Navbar />
+        <main>
           <Outlet />
-        </div>
-        <Footer />
+        </main>
       </div>
+      <Footer />
     </>
+
   )
 }
 

@@ -3,7 +3,7 @@ import { IconBrandTwitter, IconBrandYoutube, IconBrandInstagram } from "@tabler/
 
 export default function Footer() {
   return (
-    <div>
+    <footer>
       <Container className="flex justify-between items-center flex-col">
         <Text c="dimmed" size="sm">
           © 2024 LearnLog. All rights reserved.
@@ -21,6 +21,6 @@ export default function Footer() {
           </ActionIcon>
         </Group>
       </Container>
-    </div>
+    </footer>
   )
 }

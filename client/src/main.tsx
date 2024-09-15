@@ -10,6 +10,7 @@ import './index.css'
 import '@mantine/core/styles.css';
 import Test from './components/Test.tsx';
 import ErrorPage from './pages/Error.tsx';
+import Auth from './pages/Auth.tsx';
 
 
 
@@ -22,9 +23,18 @@ const router = createBrowserRouter([
       {
         path: "test",
         element: <Test />,
-      }
+      },
+
     ]
   },
+  {
+    path: "/login",
+    element: <Auth />
+  },
+  {
+    path: "/signup",
+    element: <Auth />
+  }
 ]);
 
 const theme = createTheme({
