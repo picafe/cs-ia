@@ -52,7 +52,7 @@ export default function Auth() {
         },
 
         validate: {
-            email: (val) => (/^\S+\.+\S+@(student\.)?tdsb\.on\.ca+$/.test(val) ? null : 'Invalid email entered'),
+            email: (val) => (/^\S+\.+\S+@(student\.)?tdsb\.on\.ca+$/.test(val) && val.length < 256 ? null : 'Invalid email entered'),
             password: (val) => (val.length <= 8 && /[0-9]/.test(val) && /[a-z]/.test(val) && /[A-Z]/.test(val) && /[$&+,:;=?@#|'<>.^*()%!-]/.test(val) ? null : 'Password does not meet the requirements'),
             confirmPassword: (val): string | null => (val === signupForm.values.password ? null : 'Passwords do not match'),
         },

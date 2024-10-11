@@ -12,3 +12,31 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+model User {
+  id       Int       @id @default(autoincrement())
+  email   String    @unique
+  name    String
+  password_hash String 
+
+  sessions Session[]
+  passwordResets PasswordReset[]
+}
+
+model Session {
+  id        String   @id
+  userId    Int
+  expiresAt DateTime
+
+  user      User     @relation(references: [id], fields: [userId], onDelete: Cascade)
+}
+
+model PasswordReset {
+  id        String      @id
+  userId    Int
+  user    User        @relation(references: [id], fields: [userId], onDelete: Cascade)
+  email     String
+  code      String
+  expiresAt DateTime
+  emailVerified Boolean
+}

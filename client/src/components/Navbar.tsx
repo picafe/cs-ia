@@ -9,8 +9,12 @@ export default function Navbar() {
     const computedColorScheme = useComputedColorScheme('light', { getInitialValueInEffect: true });
     const user = {
         firstName: 'Test',
-        lastName: 'User'
+        lastName: 'User',
+        role: 'student',
     };
+    const cls = {
+        id: 16756,
+    }
     return (
         <div>
             <Container fluid>
@@ -35,7 +39,7 @@ export default function Navbar() {
                                 >
                                     <Group gap={6}>
                                         <Avatar color="cyan" radius="xl" size={24}>{user.firstName.charAt(0) + user.lastName.charAt(0)}</Avatar>
-                                        <Text fw={500} visibleFrom="sm"  size="sm" lh={1} mr={2}>
+                                        <Text fw={500} visibleFrom="sm" size="sm" lh={1} mr={2}>
                                             {user.firstName + " " + user.lastName}
                                         </Text>
                                         <IconChevronDown className="size-3" stroke={1.5} />
@@ -68,12 +72,18 @@ export default function Navbar() {
                     defaultValue="Feed"
                 >
                     <Tabs.List style={{ justifyContent: "center" }}>
-                        <Tabs.Tab value="Feed" leftSection={<IconHome className="size-3" />}>
+                        {user.role === "teacher" && <Tabs.Tab value="Home" leftSection={<IconHome className="size-3" />}>
+                            Home
+                        </Tabs.Tab>}
+                        <Tabs.Tab value="Feed" leftSection={user.role === "student" ? <IconHome className="size-3" /> : <IconLogs className="size-3" />}>
                             Feed
                         </Tabs.Tab>
-                        <Tabs.Tab value="Logging" leftSection={<IconLogs className="size-3" />}>
+                        {user.role === "student" && <Tabs.Tab value="Logging" leftSection={<IconLogs className="size-3" />}>
                             Logging
-                        </Tabs.Tab>
+                        </Tabs.Tab>}
+                        {user.role === "teacher" && <Tabs.Tab value="Settings" leftSection={<IconSettings className="size-3" />}>
+                            Settings
+                        </Tabs.Tab>}
 
                     </Tabs.List>
                 </Tabs>
