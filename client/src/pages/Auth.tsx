@@ -1,9 +1,10 @@
-import { Avatar, Button, Center, PasswordInput, SegmentedControl, Stack, TextInput } from "@mantine/core";
+import { Alert, Avatar, Button, Center, Loader, PasswordInput, SegmentedControl, Stack, TextInput } from "@mantine/core";
 import Logo from "../icons/Logo";
 import { useEffect, useState } from "react";
-import { IconCheck, IconLogin, IconSchool, IconUser, IconUserPlus, IconX } from "@tabler/icons-react";
+import { IconCheck, IconExclamationCircle, IconLogin, IconSchool, IconUser, IconUserPlus, IconX } from "@tabler/icons-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useForm } from "@mantine/form";
+import axios from "axios";
 
 function PasswordRequirementLabel({ check, label }: { check: boolean, label: string }) {
     return (
@@ -19,17 +20,36 @@ export default function Auth() {
     let location = useLocation();
     const [selected, setSelected] = useState("login");
 
+    // If the user is authenticated, it redirects them to login page, also checks if the backend is offline
+    const fetchSession = async () => {
+        await axios.get("http://localhost:3000/user/session", { withCredentials: true })
+            .then(res => {
+                if (res.data) navigate('/');
+            })
+            .catch(err => {
+                if (err.response && err.response.status === 401) return;
+                else window.alert("An unexpected error occurred. Please try again later.");
+            });
+    }
+
+    useEffect(() => {
+        fetchSession();
+    }, []);
+
     useEffect(() => {
         if (location.pathname === '/login') setSelected('login');
         else setSelected('signup');
     }, [location]);
 
+    // Handles the navigation between login and signup
     const handleNavChange = (value: string) => {
         setSelected(value);
         if (value === "login") navigate('/login');
         else navigate('/signup');
+        setErrorMessage('');
     };
 
+    // Initialization for login form
     const loginForm = useForm({
         initialValues: {
             email: '',
@@ -42,6 +62,7 @@ export default function Auth() {
         },
     });
 
+    // Initialization for signup form
     const signupForm = useForm({
         initialValues: {
             accountType: '',
@@ -53,7 +74,7 @@ export default function Auth() {
 
         validate: {
             email: (val) => (/^\S+\.+\S+@(student\.)?tdsb\.on\.ca+$/.test(val) && val.length < 256 ? null : 'Invalid email entered'),
-            password: (val) => (val.length <= 8 && /[0-9]/.test(val) && /[a-z]/.test(val) && /[A-Z]/.test(val) && /[$&+,:;=?@#|'<>.^*()%!-]/.test(val) ? null : 'Password does not meet the requirements'),
+            password: (val) => (val.length >= 8 && /[0-9]/.test(val) && /[a-z]/.test(val) && /[A-Z]/.test(val) && /[$&+,:;=?@#|'<>.^*()%!-]/.test(val) ? null : 'Password does not meet the requirements'),
             confirmPassword: (val): string | null => (val === signupForm.values.password ? null : 'Passwords do not match'),
         },
     });
@@ -66,6 +87,7 @@ export default function Auth() {
         { check: /[$&+,:;=?@#|'<>.^*()%!-]/.test(signupForm.values.password), label: "Has a special character" },
     ];
 
+    // Auto-fills the name field based on the TDSB email entered
     const setName = (email: string) => {
         if (/^\S+\.+\S+@(student\.)?tdsb\.on\.ca+$/.test(email)) {
             if (/^\d+$/.test(email.split('@')[0].split('.').join(' ').slice(-1)))
@@ -78,13 +100,13 @@ export default function Auth() {
     };
 
     const setEmail = (email: string) => {
-        if (/^\S+\.+\S+@tdsb\.on\.ca+$/.test(email)) 
+        if (/^\S+\.+\S+@tdsb\.on\.ca+$/.test(email))
             signupForm.setFieldValue('accountType', 'teacher');
         else if (/^\S+\.+\S+@student\.tdsb\.on\.ca+$/.test(email))
             signupForm.setFieldValue('accountType', 'student');
         else
             signupForm.setFieldValue('accountType', '');
-        signupForm.setFieldValue('email', email);    
+        signupForm.setFieldValue('email', email);
     }
 
     const setAvatar = (name: string) => {
@@ -94,14 +116,65 @@ export default function Auth() {
             return <Avatar color="red" size={30}> ERR </Avatar>
         else
             return <Avatar color="cyan" size={30}> {name.split(" ").map((word) => word.charAt(0).toUpperCase())} </Avatar>
+    }
 
+    interface signupUser {
+        accountType: string,
+        email: string,
+        name: string,
+        password: string,
+        confirmPassword: string,
+    }
+
+    const [errorMessage, setErrorMessage] = useState('');
+    const [loading, setLoading] = useState(false);
+
+    const signupUser = async (values: signupUser) => {
+        setLoading(true);
+        const { name, email, password } = values;
+        
+        try {
+            const res = await axios.get(`http://localhost:3000/user/create`, { withCredentials: true, params: { email: email, name: name, password: password } })
+            if (res.data)
+                navigate('/');
+        } catch (err) {
+            let errorMessage: string;
+                if (axios.isAxiosError(err) && err.response)
+                    errorMessage = err.response.data;
+                else
+                    errorMessage = "Something unexpected happened! Please contact support.";
+            setErrorMessage('Login failed: ' + errorMessage);
+        } finally {
+            setLoading(false)
+        }
+    }
+
+
+
+    const loginUser = async(values: { email: string, password: string }) => {
+        setLoading(true);
+        try {
+            const res = await axios.get(`http://localhost:3000/user/login`, { withCredentials: true, params: values })
+            if (res.data) 
+                navigate('/');
+
+        } catch (err) {
+            let errorMessage: string;
+            if (axios.isAxiosError(err) && err.response)
+                errorMessage = err.response.data;
+            else
+                errorMessage = "Something unexpected happened! Please contact support.";
+            setErrorMessage('Login failed: ' + errorMessage);
+        } finally {
+            setLoading(false)
+        }
     }
 
     return (
         <div className="flex flex-row max-h-screen">
             <div className="w-2/5">
-                <div className="h-full flex flex-col justify-center items-center p-16 overflow-y-scroll">
-                    <div className="text-5xl font-bold w-full">
+                <div className="h-full w-full flex flex-col justify-center items-center p-16 overflow-y-scroll">
+                    <div className="text-5xl font-bold w-full mt-24">
                         <h1 style={{ fontSize: "3rem" }}>Welcome to <br />
                             <span className="flex justify-center items-center mt-4">
                                 <Logo size={48} /> LearnLog
@@ -131,8 +204,13 @@ export default function Auth() {
                         ]} />
                     </div>
                     {selected === "login" ?
-                        <form className="w-full text-left" onSubmit={loginForm.onSubmit((values) => console.log(values))}>
+                        <form className="w-full text-left py-4" onSubmit={loginForm.onSubmit((values) => loginUser(values))}>
                             <Stack>
+                                {errorMessage && (
+                                    <Alert variant="light" title="Error" color="red" icon={<IconExclamationCircle />}>
+                                        {errorMessage}
+                                    </Alert>
+                                )}
                                 <TextInput
                                     required
                                     size="md"
@@ -149,18 +227,23 @@ export default function Auth() {
                                     required
                                     value={loginForm.values.password}
                                     onChange={(event) => loginForm.setFieldValue('password', event.currentTarget.value)}
-                                    error={loginForm.errors.password && 'Password should include at least 6 characters'}
+                                    error={loginForm.errors.password && 'Password does not meet the requirements'}
                                     size="md"
                                     label="Password"
                                     placeholder="Enter your password"
                                 />
 
-                                <Button type="submit" fullWidth size="md" variant="filled" color="#357c99">Login</Button>
+                                <Button type="submit" fullWidth size="md" variant="filled" color="#357c99">{loading ? <Loader size={24} /> : "Sign in"}</Button>
                             </Stack>
                         </form>
                         :
-                        <form className="w-full text-left" onSubmit={signupForm.onSubmit((values) => console.log(values))}>
+                        <form className="w-full text-left py-4" onSubmit={signupForm.onSubmit((values) => signupUser(values))}>
                             <Stack >
+                                {errorMessage && (
+                                    <Alert variant="light" title="Error" color="red" icon={<IconExclamationCircle />}>
+                                        {errorMessage}
+                                    </Alert>
+                                )}
                                 <TextInput
                                     required
                                     size="md"
@@ -211,7 +294,7 @@ export default function Auth() {
                                     label="Confirm Password"
                                     placeholder="Confirm your password"
                                 />
-                                <Button type="submit" onClick={() => signupForm.setFieldValue('name', signupForm.values.name.trim())} fullWidth size="md" variant="filled" color="#357c99">Sign up</Button>
+                                <Button type="submit" onClick={() => signupForm.setFieldValue('name', signupForm.values.name.trim())} fullWidth size="md" variant="filled" color="#357c99">{loading ? <Loader size={24} /> : "Sign up"}</Button>
                             </Stack>
                         </form>
                     }

@@ -1,4 +1,4 @@
-import { prisma } from "./db.js";
+import { prisma } from "../db.js";
 import {
   encodeBase32LowerCaseNoPadding,
   encodeHexLowerCase,
@@ -14,7 +14,10 @@ export function generateSessionToken(): string {
   return token;
 }
 
-export async function createSession(token: string, userId: number): Promise<{ id: string; userId: number; expiresAt: Date; }> {
+export async function createSession(
+  token: string,
+  userId: number,
+): Promise<{ id: string; userId: number; expiresAt: Date }> {
   const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
   const session: Session = {
     id: sessionId,
@@ -31,6 +34,7 @@ export async function validateSessionToken(
   token: string,
 ): Promise<SessionValidationResult> {
   const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
+
   const result = await prisma.session.findUnique({
     where: {
       id: sessionId,
