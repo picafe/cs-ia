@@ -8,6 +8,7 @@
     "build": "deno check && vite build",
     "lint": "deno lint",
     "preview": "vite preview",
+    "format": "deno fmt",
     "prepare": "cd .. && husky client/.husky"
   },
   "dependencies": {
