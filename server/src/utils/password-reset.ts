@@ -5,7 +5,7 @@ import { sha256 } from "@oslojs/crypto/sha2";
 import type { User } from "./user";
 import { Request, Response } from "express";
 
-// VERY SKETCHY, MUST TEST!!!!!!! (EVERY FUNCTION) (AND THE WHOLE FILE)
+// VERY SKETCHY, MUST TEST!!!!!!!
 export function createPasswordResetSession(
   token: string,
   userId: number,

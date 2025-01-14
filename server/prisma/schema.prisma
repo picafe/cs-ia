@@ -8,6 +8,10 @@ generator client {
   provider = "prisma-client-js"
 }
 
+generator erd {
+  provider = "prisma-erd-generator"
+}
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -18,9 +22,28 @@ model User {
   email         String @unique
   name          String
   password_hash String
-
   sessions       Session[]
   passwordResets PasswordReset[]
+
+
+  role          Role   @default(STUDENT)
+  totalHours     Float     @default(0)
+    
+  class Class
+  activities Activity[]
+}
+
+enum Role {
+  TEACHER
+  STUDENT
+}
+
+
+
+enum ProgressStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  MET_REQUIREMENTS
 }
 
 model Session {
@@ -38,4 +61,49 @@ model PasswordReset {
   code          String
   expiresAt     DateTime
   emailVerified Boolean
+}
+
+model Class {
+  id          Int      @id @default(autoincrement())
+  name        String
+  courseCode  String
+  description String
+  teacherId   Int
+  
+  endDate     DateTime?
+
+  activities Activity[]
+  dueDates    DueDate[]
+}
+
+
+model DueDate {
+  id          Int       @id @default(autoincrement())
+  classId     Int
+  dueDate     DateTime  // Deadline for completing hours
+  requiredHours Float    // Number of hours required by this deadline
+  class       Class     @relation(fields: [classId], references: [id])
+}
+
+model Activity {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id])
+  classId     Int
+  class       Class    @relation(fields: [classId], references: [id])
+  logs        Log[]
+  
+}
+
+model Log {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  activityId  Int
+  classId     Int
+  createdAt   DateTime
+  updatedAt   DateTime
+  typingTime  Int
+  activity    Activity @relation(fields: [activityId], references: [id])
 }
