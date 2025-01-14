@@ -19,10 +19,11 @@ export default function Auth() {
     const navigate = useNavigate();
     let location = useLocation();
     const [selected, setSelected] = useState("login");
+    const serverUrl = import.meta.env.VITE_SERVER_URL;
 
     // If the user is authenticated, it redirects them to login page, also checks if the backend is offline
     const fetchSession = async () => {
-        await axios.get("http://localhost:3000/user/session", { withCredentials: true })
+        await axios.get( serverUrl + "/user/session", { withCredentials: true })
             .then(res => {
                 if (res.data) navigate('/');
             })
@@ -131,10 +132,10 @@ export default function Auth() {
 
     const signupUser = async (values: signupUser) => {
         setLoading(true);
-        const { name, email, password } = values;
+        const { name, email, password, accountType } = values;
         
         try {
-            const res = await axios.get(`http://localhost:3000/user/create`, { withCredentials: true, params: { email: email, name: name, password: password } })
+            const res = await axios.get(`http://localhost:3000/user/create`, { withCredentials: true, params: { email: email, name: name, password: password, role: accountType } })
             if (res.data)
                 navigate('/');
         } catch (err) {
@@ -169,6 +170,8 @@ export default function Auth() {
             setLoading(false)
         }
     }
+
+
 
     return (
         <div className="flex flex-row max-h-screen">
@@ -211,6 +214,7 @@ export default function Auth() {
                                         {errorMessage}
                                     </Alert>
                                 )}
+                               
                                 <TextInput
                                     required
                                     size="md"

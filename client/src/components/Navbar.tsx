@@ -72,11 +72,8 @@ export default function Navbar() {
                     defaultValue="Feed"
                 >
                     <Tabs.List style={{ justifyContent: "center" }}>
-                        {user.role === "teacher" && <Tabs.Tab value="Home" leftSection={<IconHome className="size-3" />}>
+                        <Tabs.Tab value="Feed" leftSection={<IconHome className="size-3" />}>
                             Home
-                        </Tabs.Tab>}
-                        <Tabs.Tab value="Feed" leftSection={user.role === "student" ? <IconHome className="size-3" /> : <IconLogs className="size-3" />}>
-                            Feed
                         </Tabs.Tab>
                         {user.role === "student" && <Tabs.Tab value="Logging" leftSection={<IconLogs className="size-3" />}>
                             Logging
