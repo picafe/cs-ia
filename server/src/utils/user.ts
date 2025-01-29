@@ -1,3 +1,4 @@
+import { Class, Role, User } from "@prisma/client";
 import { prisma } from "../db";
 import { hashPassword } from "./password";
 
@@ -5,16 +6,43 @@ export async function createUser(
   email: string,
   name: string,
   password: string,
-): Promise<User> {
+  role: Role
+): Promise<UserBInfo> {
   const passwordHash = await hashPassword(password);
-  const usr = await prisma.user.create({
-    data: {
-      email: email,
-      name: name,
-      password_hash: passwordHash,
-    },
-  });
-  const user: User = {
+  let usr: UserBInfo | null = null;
+  if (role === "STUDENT") {
+    usr = await prisma.user.create({
+      data: {
+        email: email,
+        name: name,
+        password_hash: passwordHash,
+        role: role,
+        student: {
+          create: {
+            
+          }
+        }
+      },
+    });
+  } else if (role === "TEACHER") {
+    usr = await prisma.user.create({
+      data: {
+        email: email,
+        name: name,
+        password_hash: passwordHash,
+        role: role,
+        teacher: {
+          create: {
+            
+          }
+        }
+      },
+    });
+  }
+  if (!usr) {
+    throw new Error("User creation failed");
+  }
+  const user: UserBInfo = {
     id: usr.id,
     name: usr.name,
     email: usr.email,
@@ -24,7 +52,7 @@ export async function createUser(
 
 export async function updateUserPassword(
   userId: number,
-  password: string,
+  password: string
 ): Promise<void> {
   const passwordHash = await hashPassword(password);
   await prisma.user.update({
@@ -37,7 +65,7 @@ export async function updateUserPassword(
 
 export async function updateUserEmailAndSetEmailAsVerified(
   userId: number,
-  email: string,
+  email: string
 ): Promise<void> {
   await prisma.user.update({
     where: { id: userId },
@@ -63,7 +91,7 @@ export async function getUserPasswordHash(userId: number): Promise<string> {
   return usr.password_hash;
 }
 
-export async function getUserFromEmail(email: string): Promise<User | null> {
+export async function getUserFromEmail(email: string): Promise<UserBInfo | null> {
   const usr = await prisma.user.findUnique({
     where: {
       email: email,
@@ -72,7 +100,7 @@ export async function getUserFromEmail(email: string): Promise<User | null> {
   if (usr === null) {
     return null;
   }
-  const user: User = {
+  const user: UserBInfo = {
     id: usr.id,
     email: usr.email,
     name: usr.name,
@@ -80,7 +108,22 @@ export async function getUserFromEmail(email: string): Promise<User | null> {
   return user;
 }
 
-export interface User {
+export async function getUserClasses(userId: number): Promise<Class | null> {
+  const userClass = await prisma.studentUser.findUnique({
+    where: { userId: userId },
+    include: { class: true },
+  });
+  return userClass?.class || null;
+}
+
+export async function getUserType(userId: number): Promise<Role | null> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+  });
+  return user?.role || null;
+}
+
+export interface UserBInfo {
   id: number;
   email: string;
   name: string;

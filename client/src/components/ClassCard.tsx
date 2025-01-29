@@ -9,7 +9,7 @@ const stats = [
 export function ClassCard() {
   const items = stats.map((stat) => (
     <div key={stat.title}>
-      <Text size="xs" color="dimmed">
+      <Text size="xs" c="dimmed">
         {stat.title}
       </Text>
       <Text fw={500} size="sm">
@@ -19,7 +19,7 @@ export function ClassCard() {
   ));
 
   return (
-    <Card withBorder padding="lg" className="bg-zinc-300">
+    <Card withBorder padding="lg" className="bg-zinc-300" component='a' href='/class/1'>
       <Card.Section>
         <Image
           src="https://images.unsplash.com/photo-1581889470536-467bdbe30cd0?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=720&q=80"

@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "tsx watch src/index.ts",
-    "format": "deno fmt"
+    "format": "deno fmt",
+    "seed": "tsx prisma/seed.ts"
   },
   "keywords": [],
   "author": "",

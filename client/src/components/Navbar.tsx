@@ -1,19 +1,34 @@
 import { Avatar, Container, Group, Menu, Tabs, UnstyledButton, Text, useComputedColorScheme, useMantineColorScheme, ActionIcon } from "@mantine/core";
 import Logo from "../icons/Logo";
 import { IconChevronDown, IconHome, IconLogout, IconLogs, IconMoon, IconSettings, IconSun } from "@tabler/icons-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
 
 
-export default function Navbar() {
+export default function Navbar(props: any) {
+    const navigate = useNavigate();
+
+    
     const { setColorScheme } = useMantineColorScheme();
     const computedColorScheme = useComputedColorScheme('light', { getInitialValueInEffect: true });
+    const serverUrl = import.meta.env.VITE_SERVER_URL;
     const user = {
         firstName: 'Test',
         lastName: 'User',
         role: 'student',
     };
-    const cls = {
-        id: 16756,
+    
+    const logout = async() => {
+        try {
+            const res = await axios.post(serverUrl + '/user/logout', {}, { withCredentials: true });
+            if (res.status === 204) navigate('/login');
+            else window.alert("An unexpected error occurred. Please try again later.");
+        } catch(err) {
+            if (axios.isAxiosError(err) && err.response)
+                alert("Logout failed:" + err.response.data);
+            else window.alert("An unexpected error occurred. Please try again later.");
+        }
+
     }
     return (
         <div>
@@ -40,7 +55,7 @@ export default function Navbar() {
                                     <Group gap={6}>
                                         <Avatar color="cyan" radius="xl" size={24}>{user.firstName.charAt(0) + user.lastName.charAt(0)}</Avatar>
                                         <Text fw={500} visibleFrom="sm" size="sm" lh={1} mr={2}>
-                                            {user.firstName + " " + user.lastName}
+                                            {props.user.name}
                                         </Text>
                                         <IconChevronDown className="size-3" stroke={1.5} />
                                     </Group>
@@ -50,7 +65,7 @@ export default function Navbar() {
                                 <Menu.Item leftSection={<IconSettings className="size-4" stroke={1.5} />}>
                                     Settings
                                 </Menu.Item>
-                                <Menu.Item leftSection={<IconLogout className="size-4 stroke-red-600" stroke={1.5} />}>
+                                <Menu.Item onClick={logout} leftSection={<IconLogout className="size-4 stroke-red-600" stroke={1.5} />}>
                                     Logout
                                 </Menu.Item>
                             </Menu.Dropdown>
@@ -75,10 +90,10 @@ export default function Navbar() {
                         <Tabs.Tab value="Feed" leftSection={<IconHome className="size-3" />}>
                             Home
                         </Tabs.Tab>
-                        {user.role === "student" && <Tabs.Tab value="Logging" leftSection={<IconLogs className="size-3" />}>
+                        {props.user.role === "STUDENT" && <Tabs.Tab value="Logging" leftSection={<IconLogs className="size-3" />}>
                             Logging
                         </Tabs.Tab>}
-                        {user.role === "teacher" && <Tabs.Tab value="Settings" leftSection={<IconSettings className="size-3" />}>
+                        {props.user.role === "TEACHER" && <Tabs.Tab value="Settings" leftSection={<IconSettings className="size-3" />}>
                             Settings
                         </Tabs.Tab>}
 

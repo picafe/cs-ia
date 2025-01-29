@@ -102,9 +102,9 @@ export default function Auth() {
 
     const setEmail = (email: string) => {
         if (/^\S+\.+\S+@tdsb\.on\.ca+$/.test(email))
-            signupForm.setFieldValue('accountType', 'teacher');
+            signupForm.setFieldValue('accountType', 'TEACHER');
         else if (/^\S+\.+\S+@student\.tdsb\.on\.ca+$/.test(email))
-            signupForm.setFieldValue('accountType', 'student');
+            signupForm.setFieldValue('accountType', 'STUDENT');
         else
             signupForm.setFieldValue('accountType', '');
         signupForm.setFieldValue('email', email);
@@ -135,30 +135,31 @@ export default function Auth() {
         const { name, email, password, accountType } = values;
         
         try {
-            const res = await axios.get(`http://localhost:3000/user/create`, { withCredentials: true, params: { email: email, name: name, password: password, role: accountType } })
-            if (res.data)
-                navigate('/');
+            const res = await axios.post(serverUrl + "/user/create", { email, name, password, role: accountType }, { withCredentials: true });
+            if (res.data) {
+                if (accountType === 'TEACHER')
+                    navigate('/class/new');
+                else
+                    navigate('/class/join');
+            }
         } catch (err) {
             let errorMessage: string;
-                if (axios.isAxiosError(err) && err.response)
-                    errorMessage = err.response.data;
-                else
-                    errorMessage = "Something unexpected happened! Please contact support.";
-            setErrorMessage('Login failed: ' + errorMessage);
+            if (axios.isAxiosError(err) && err.response)
+                errorMessage = err.response.data;
+            else
+                errorMessage = "Something unexpected happened! Please contact support.";
+            setErrorMessage('Signup failed: ' + errorMessage);
         } finally {
-            setLoading(false)
+            setLoading(false);
         }
     }
 
-
-
-    const loginUser = async(values: { email: string, password: string }) => {
+    const loginUser = async (values: { email: string, password: string }) => {
         setLoading(true);
         try {
-            const res = await axios.get(`http://localhost:3000/user/login`, { withCredentials: true, params: values })
+            const res = await axios.post(serverUrl + "/user/login", values, { withCredentials: true });
             if (res.data) 
                 navigate('/');
-
         } catch (err) {
             let errorMessage: string;
             if (axios.isAxiosError(err) && err.response)
@@ -167,11 +168,9 @@ export default function Auth() {
                 errorMessage = "Something unexpected happened! Please contact support.";
             setErrorMessage('Login failed: ' + errorMessage);
         } finally {
-            setLoading(false)
+            setLoading(false);
         }
     }
-
-
 
     return (
         <div className="flex flex-row max-h-screen">

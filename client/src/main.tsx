@@ -11,7 +11,9 @@ import '@mantine/core/styles.css';
 import Test from './components/Test.tsx';
 import ErrorPage from './pages/Error.tsx';
 import Auth from './pages/Auth.tsx';
-import ClassList from './pages/ClassList.tsx';
+import Dashboard from './pages/Dashboard.tsx';
+import JoinClass from './pages/JoinClass.tsx';
+import CreateClass from './pages/CreateClass.tsx';
 
 
 
@@ -20,14 +22,24 @@ const router = createBrowserRouter([
     path: "/",
     element: <App />,
     errorElement: <ErrorPage />,
+    
     children: [
       {
         path: "test",
         element: <Test />,
       },
       {
-        path: 'classes',
-        element: <ClassList/>,
+        path: 'dashboard',
+        element: <Dashboard/>,
+      },
+      {
+        path: 'class/join',
+        element: <JoinClass />,
+      },
+      {
+        path: 'class/new',
+        element: <CreateClass />
+
       }
 
     ]

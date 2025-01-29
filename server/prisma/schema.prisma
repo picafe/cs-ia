@@ -1,9 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -18,27 +15,52 @@ datasource db {
 }
 
 model User {
-  id            Int    @id @default(autoincrement())
-  email         String @unique
-  name          String
-  password_hash String
+  id             Int             @id @default(autoincrement())
+  email          String          @unique
+  name           String
+  password_hash  String
   sessions       Session[]
   passwordResets PasswordReset[]
 
+  role       Role  @default(STUDENT)
 
-  role          Role   @default(STUDENT)
-  totalHours     Float     @default(0)
-    
-  class Class
+  teacher TeacherUser?
+  student StudentUser?
+
+  // totalHours Float @default(0)
+
+  // class Class? @relation(fields: [classId], references: [id])
+  // classId Int? 
+
+  // activities Activity[]
+}
+
+model StudentUser {
+  id Int @id @default(autoincrement())
+  userId Int @unique
+  user User @relation(fields: [userId], references: [id])
+
+  totalHours Float @default(0)
+
+  class Class? @relation(fields: [classId], references: [id])
+  classId Int? 
+
   activities Activity[]
+
+}
+
+model TeacherUser {
+  id Int @id @default(autoincrement())
+  userId Int @unique
+  user User @relation(fields: [userId], references: [id])
+
+  classes Class[]
 }
 
 enum Role {
   TEACHER
   STUDENT
 }
-
-
 
 enum ProgressStatus {
   NOT_STARTED
@@ -50,7 +72,7 @@ model Session {
   id        String   @id
   userId    Int
   expiresAt DateTime
-  user User @relation(references: [id], fields: [userId], onDelete: Cascade)
+  user      User     @relation(references: [id], fields: [userId], onDelete: Cascade)
 }
 
 model PasswordReset {
@@ -64,46 +86,46 @@ model PasswordReset {
 }
 
 model Class {
-  id          Int      @id @default(autoincrement())
+  id          Int    @id @default(autoincrement())
   name        String
   courseCode  String
   description String
-  teacherId   Int
-  
-  endDate     DateTime?
+  code        String    @unique
 
-  activities Activity[]
-  dueDates    DueDate[]
+  teacherId   Int
+  TeacherUser TeacherUser @relation(fields: [teacherId], references: [userId])
+
+  endDate DateTime?
+
+  students StudentUser[]
+
+  dueDates DueDate[]
+
 }
 
-
 model DueDate {
-  id          Int       @id @default(autoincrement())
-  classId     Int
-  dueDate     DateTime  // Deadline for completing hours
-  requiredHours Float    // Number of hours required by this deadline
-  class       Class     @relation(fields: [classId], references: [id])
+  id            Int      @id @default(autoincrement())
+  classId       Int
+  dueDate       DateTime // Deadline for completing hours
+  requiredHours Float // Number of hours required by this deadline
+  class         Class    @relation(fields: [classId], references: [id])
 }
 
 model Activity {
-  id          Int      @id @default(autoincrement())
+  id          Int    @id @default(autoincrement())
   name        String
   description String
   userId      Int
-  user        User     @relation(fields: [userId], references: [id])
-  classId     Int
-  class       Class    @relation(fields: [classId], references: [id])
+  user        StudentUser   @relation(fields: [userId], references: [id])
   logs        Log[]
-  
 }
 
 model Log {
-  id          Int      @id @default(autoincrement())
-  userId      Int
-  activityId  Int
-  classId     Int
-  createdAt   DateTime
-  updatedAt   DateTime
-  typingTime  Int
-  activity    Activity @relation(fields: [activityId], references: [id])
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  activityId Int
+  createdAt  DateTime
+  updatedAt  DateTime
+  typingTime Int
+  activity   Activity @relation(fields: [activityId], references: [id])
 }

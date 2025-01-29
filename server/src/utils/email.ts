@@ -1,7 +1,7 @@
 import { prisma } from "../db";
 
 export function verifyEmailInput(email: string): boolean {
-  return /^\S+\.+\S+@(student\.)?tdsb\.on\.ca+$/.test(email) &&
+  return typeof email === "string" && /^\S+\.+\S+@(student\.)?tdsb\.on\.ca+$/.test(email) &&
     email.length < 256;
 }
 

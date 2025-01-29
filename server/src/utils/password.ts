@@ -28,6 +28,7 @@ export async function verifyPasswordHash(
 
 export function verifyPasswordStrength(password: string): boolean {
   return (
+    typeof password === "string" &&
     password.length > 8 &&
     password.length < 255 &&
     /[0-9]/.test(password) &&
