@@ -1,10 +1,10 @@
-import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
-import axios from 'axios';
-import Footer from './components/Footer';
-import '@mantine/dates/styles.css';
-import { Loader } from '@mantine/core';
-import { User } from './types';
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import axios from "axios";
+import Footer from "./components/Footer";
+import "@mantine/dates/styles.css";
+import { Loader } from "@mantine/core";
+import { User } from "./types";
 
 function BaseApp() {
   const navigate = useNavigate();
@@ -12,23 +12,22 @@ function BaseApp() {
   const [loading, setLoading] = useState(true);
   let location = useLocation();
 
-
   const fetchSession = async () => {
     try {
       const response = await axios.get("http://localhost:3000/user/session", {
-        withCredentials: true
+        withCredentials: true,
       });
       setUser(response.data);
     } catch (err) {
       if (axios.isAxiosError(err) && err.response?.status === 401) {
-        navigate('/login');
+        navigate("/login");
       } else {
         window.alert("An unexpected error occurred. Please try again later.");
       }
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
     fetchSession();
@@ -36,20 +35,23 @@ function BaseApp() {
 
   if (loading) {
     return (
-      <div className='flex justify-center align-middle min-h-screen px-auto sm:px-8 lg:px-10 sm:mx-auto p-8 antialiased sm:max-w-2xl md:max-w-6xl overflow-hidden md:overflow-visible'>
+      <div className="flex justify-center align-middle min-h-screen px-auto sm:px-8 lg:px-10 sm:mx-auto p-8 antialiased sm:max-w-2xl md:max-w-6xl overflow-hidden md:overflow-visible">
         <Loader color="gray" type="bars" />
-      </div>)
+      </div>
+    );
   }
 
   return (
     <>
-      <div id="shell" className='min-h-screen overflow-hidden md:overflow-visible'>
-          <Outlet context={user} />
+      <div
+        id="shell"
+        className="min-h-screen overflow-hidden md:overflow-visible"
+      >
+        <Outlet context={user} />
       </div>
       <Footer />
     </>
-  )
+  );
 }
 
 export default BaseApp;
-

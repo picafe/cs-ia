@@ -6,10 +6,9 @@ export default {
   corePlugins: {
     preflight: false,
   },
-  darkMode: ['selector', '[data-mantine-color-scheme="dark"]'],
+  darkMode: ["selector", '[data-mantine-color-scheme="dark"]'],
   theme: {
     extend: {},
   },
   plugins: [],
-}
-
+};

@@ -1,5 +1,9 @@
-import { Container, Group, ActionIcon, Text, rem } from "@mantine/core";
-import { IconBrandTwitter, IconBrandYoutube, IconBrandInstagram } from "@tabler/icons-react";
+import { ActionIcon, Container, Group, rem, Text } from "@mantine/core";
+import {
+  IconBrandInstagram,
+  IconBrandTwitter,
+  IconBrandYoutube,
+} from "@tabler/icons-react";
 
 export default function Footer() {
   return (
@@ -11,16 +15,25 @@ export default function Footer() {
 
         <Group gap={0} justify="flex-end" wrap="nowrap">
           <ActionIcon size="lg" color="gray" variant="subtle">
-            <IconBrandTwitter style={{ width: rem(18), height: rem(18) }} stroke={1.5} />
+            <IconBrandTwitter
+              style={{ width: rem(18), height: rem(18) }}
+              stroke={1.5}
+            />
           </ActionIcon>
           <ActionIcon size="lg" color="gray" variant="subtle">
-            <IconBrandYoutube style={{ width: rem(18), height: rem(18) }} stroke={1.5} />
+            <IconBrandYoutube
+              style={{ width: rem(18), height: rem(18) }}
+              stroke={1.5}
+            />
           </ActionIcon>
           <ActionIcon size="lg" color="gray" variant="subtle">
-            <IconBrandInstagram style={{ width: rem(18), height: rem(18) }} stroke={1.5} />
+            <IconBrandInstagram
+              style={{ width: rem(18), height: rem(18) }}
+              stroke={1.5}
+            />
           </ActionIcon>
         </Group>
       </Container>
     </footer>
-  )
+  );
 }

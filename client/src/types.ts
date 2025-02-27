@@ -11,4 +11,4 @@ enum Role {
   STUDENT = "STUDENT",
 }
 
-export type { User, Role };
+export type { Role, User };
