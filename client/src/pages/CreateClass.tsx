@@ -2,9 +2,9 @@ import { Alert, Button, Code, CopyButton, FocusTrap, Group, Loader, Modal, Stack
 import { DateInput, DateValue } from '@mantine/dates';
 import { useForm } from '@mantine/form';
 import { useDisclosure } from '@mantine/hooks';
-import { IconCopy, IconExclamationCircle, IconSchool } from '@tabler/icons-react';
+import { IconExclamationCircle, IconSchool } from '@tabler/icons-react';
 import axios from 'axios';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 export default function CreateClass() {
 
     const [errorMessage, setErrorMessage] = useState('');
@@ -39,9 +39,10 @@ export default function CreateClass() {
             let errorMessage: string;
             if (axios.isAxiosError(err) && err.response)
                 errorMessage = err.response.data;
-            else
+            else {
                 errorMessage = "Something unexpected happened! Please contact support.";
-            setErrorMessage('Login failed: ' + errorMessage);
+                setErrorMessage('Login failed: ' + errorMessage);
+            }
         }
         finally {
             setLoading(false);
@@ -49,7 +50,7 @@ export default function CreateClass() {
     }
     return (
         <div>
-            <Modal opened={opened} onClose={close} title="Focus demo">
+            <Modal opened={opened} onClose={close} title="Create Class">
                 <FocusTrap.InitialFocus />
                 {errorMessage && (
                     <Alert variant="light" title="Error" color="red" icon={<IconExclamationCircle />}>
@@ -58,28 +59,30 @@ export default function CreateClass() {
                 )}
                 {/* if loading is true, display a loader, else if error, nothing, else code and copy button */}
                 {loading ? <Loader size={24} /> : errorMessage ? null : <Group>
-                    <Code
-                        style={{
-                            fontSize: '1.5rem',
-                            padding: '1rem',
-                            letterSpacing: '0.2rem',
-                            fontFamily: 'monospace'
-                        }}
-                    >
-                        {code}
-                    </Code>
-                    <CopyButton value={code}>
-                        {({ copied, copy }) => (
-                            <Button
-                                color={copied ? 'teal' : 'blue'}
-                                onClick={copy}
-                            >
-                                {copied ? 'Copied!' : 'Copy'}
-                            </Button>
-                        )}
-                    </CopyButton>
+                    <div className='w-full flex flex-row justify-center items-center gap-4 p-4'>
+                        <Code
+                            style={{
+                                fontSize: '1.5rem',
+                                padding: '1rem',
+                                letterSpacing: '0.2rem',
+                                fontFamily: 'monospace'
+                            }}
+                        >
+                            {code}
+                        </Code>
+                        <CopyButton value={code}>
+                            {({ copied, copy }) => (
+                                <Button
+                                    color={copied ? 'teal' : 'blue'}
+                                    onClick={copy}
+                                >
+                                    {copied ? 'Copied!' : 'Copy'}
+                                </Button>
+                            )}
+                        </CopyButton>
+                    </div>
                 </Group>}
-                <Button component="a" href='/' fullWidth size="md" variant="filled" color="#357c99" disabled={!!errorMessage} leftSection={<IconCopy className='size-5' />}>{loading ? <Loader size={24} /> : "Continue"}</Button>
+                <Button component="a" href='/' fullWidth size="md" variant="filled" color="#357c99" disabled={!!errorMessage}>{loading ? <Loader size={24} /> : "Continue"}</Button>
             </Modal>
             <form className="w-full text-left py-4" onSubmit={form.onSubmit((values) => createClass(values))}>
                 <Stack >
@@ -94,36 +97,36 @@ export default function CreateClass() {
                         error={form.errors.email && 'Invalid email entered'}
                         rightSectionPointerEvents="none"
                         rightSection={<IconSchool className="size-5" />}
-                        label="School Email"
-                        placeholder="Your email"
-
+                        label="Class Name"
+                        placeholder="Class Name"
+                        
                     />
                     <TextInput
                         required
                         size="md"
                         value={form.values.courseCode}
                         onChange={(event) => form.setFieldValue('courseCode', event.currentTarget.value)}
-                        label="Your Name"
-                        description="This field is auto-filled based on your email."
-                        placeholder="Your name"
+                        label="Course Code"
+                        placeholder="Course Code"
                     />
                     <Textarea
+                        required
                         size='md'
                         value={form.values.description}
                         onChange={(event) => form.setFieldValue('description', event.currentTarget.value)}
-                        label="Input label"
+                        label="Course Description"
                         description="Input description"
-                        placeholder="Input placeholder"
+                        placeholder="Course Description"
                     />
                     <DateInput
+                        required
                         value={date}
                         onChange={setFormDate}
-                        label="Date input"
-                        placeholder="Date input"
+                        label="Course End Date"
+                        description="Please select a date later than the actual course end date. The course will be irreversibly closed on this date. However, you will be able to download a report before this date."
+                        placeholder="Course End Date"
                     />
-
-
-                    <Button onClick={open} type="submit" fullWidth size="md" variant="filled" color="#357c99">{loading ? <Loader size={24} /> : "Sign in"}</Button>
+                    <Button onClick={open} type="submit" fullWidth size="md" variant="filled" color="#357c99">{loading ? <Loader size={24} /> : "Create"}</Button>
 
                 </Stack>
 

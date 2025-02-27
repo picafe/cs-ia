@@ -20,7 +20,7 @@ import {
 } from "./utils/session";
 import { authMiddleware } from "./middleware";
 import { Role } from "@prisma/client";
-import { createClass } from "./utils/class";
+import { createClass, joinClass } from "./utils/class";
 
 dotenv.config();
 const app = express();
@@ -87,7 +87,7 @@ app.use(async (req, res, next) => {
     // Only sets cookie if it's about to expire
     const oneHour = 60 * 60 * 1000;
     if (session.expiresAt.getTime() - Date.now() < oneHour) {
-      res.signecookie("session", token, {
+      res.cookie("session", token, {
         httpOnly: true,
         path: "/",
         secure: (process.env.NODE_ENV || "development") !== "development",
@@ -178,14 +178,13 @@ app.post(
 app.post("/user/logout", async (req: Request, res: Response) => {
   invalidateSession(req.signedCookies["session"]);
   res.cookie("session", "", {
-		httpOnly: true,
-		path: "/",
+    httpOnly: true,
+    path: "/",
     secure: (process.env.NODE_ENV || "development") !== "development",
-		sameSite: "lax",
-		maxAge: 0
-	});
-  res.status(204);
-  return;
+    sameSite: "lax",
+    maxAge: 0,
+  });
+  res.status(204).send(true);
 });
 
 app.get("/password/reset", async (req: Request, res: Response) => {});
@@ -216,6 +215,38 @@ app.get("/user/classes", async (req: Request, res: Response) => {
 });
 
 app.get("/user/role", async (req: Request, res: Response) => {});
+
+
+app.post("/class/join", async (req: Request, res: Response) => {
+  try {
+    if (req.app.locals.user.role !== "STUDENT") {
+      res.status(403).send("Unauthorized");
+      return;
+    }
+
+    if (!req.body || !req.body.code) {
+      res.status(400).send("Invalid request body");
+      return;
+    }
+
+    const result = await joinClass({
+      classCode: req.body.code,
+      userId: req.app.locals.user.id,
+    });
+
+    if (!result) {
+      res.status(404).send("Class not created");
+      return;
+    }
+    res.status(200).json(result)
+    return;
+
+  } catch (error) {
+    res.status(500).send("Internal server error");
+    console.error(error);
+    return;
+  }
+});
 
 app.post("/class/create", async (req: Request, res: Response) => {
   try{

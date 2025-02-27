@@ -3,32 +3,30 @@ import Logo from "../icons/Logo";
 import { IconChevronDown, IconHome, IconLogout, IconLogs, IconMoon, IconSettings, IconSun } from "@tabler/icons-react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { User } from "../types";
 
 
-export default function Navbar(props: any) {
+interface NavbarProps {
+    user: User | undefined;
+    menuBar: boolean;
+}
+
+export default function Navbar({ user, menuBar }: NavbarProps) {
     const navigate = useNavigate();
-
-    
     const { setColorScheme } = useMantineColorScheme();
     const computedColorScheme = useComputedColorScheme('light', { getInitialValueInEffect: true });
     const serverUrl = import.meta.env.VITE_SERVER_URL;
-    const user = {
-        firstName: 'Test',
-        lastName: 'User',
-        role: 'student',
-    };
-    
-    const logout = async() => {
+
+    const logout = async () => {
         try {
             const res = await axios.post(serverUrl + '/user/logout', {}, { withCredentials: true });
             if (res.status === 204) navigate('/login');
             else window.alert("An unexpected error occurred. Please try again later.");
-        } catch(err) {
+        } catch (err) {
             if (axios.isAxiosError(err) && err.response)
                 alert("Logout failed:" + err.response.data);
             else window.alert("An unexpected error occurred. Please try again later.");
         }
-
     }
     return (
         <div>
@@ -53,16 +51,16 @@ export default function Navbar(props: any) {
                                 <UnstyledButton
                                 >
                                     <Group gap={6}>
-                                        <Avatar color="cyan" radius="xl" size={24}>{user.firstName.charAt(0) + user.lastName.charAt(0)}</Avatar>
+                                        <Avatar color="cyan" radius="xl" size={24}>{user?.name.split(" ").map((word) => word.charAt(0).toUpperCase())}</Avatar>
                                         <Text fw={500} visibleFrom="sm" size="sm" lh={1} mr={2}>
-                                            {props.user.name}
+                                            {user?.name}
                                         </Text>
                                         <IconChevronDown className="size-3" stroke={1.5} />
                                     </Group>
                                 </UnstyledButton>
                             </Menu.Target>
                             <Menu.Dropdown>
-                                <Menu.Item leftSection={<IconSettings className="size-4" stroke={1.5} />}>
+                                <Menu.Item component={Link} to="/settings" leftSection={<IconSettings className="size-4" stroke={1.5} />}>
                                     Settings
                                 </Menu.Item>
                                 <Menu.Item onClick={logout} leftSection={<IconLogout className="size-4 stroke-red-600" stroke={1.5} />}>
@@ -83,23 +81,24 @@ export default function Navbar(props: any) {
                 </Group>
             </Container>
             <Container fluid className="justify-center">
-                <Tabs
+                {menuBar ? null : <Tabs
                     defaultValue="Feed"
                 >
                     <Tabs.List style={{ justifyContent: "center" }}>
                         <Tabs.Tab value="Feed" leftSection={<IconHome className="size-3" />}>
                             Home
                         </Tabs.Tab>
-                        {props.user.role === "STUDENT" && <Tabs.Tab value="Logging" leftSection={<IconLogs className="size-3" />}>
+                        {user?.role === "STUDENT" && <Tabs.Tab value="Logging" leftSection={<IconLogs className="size-3" />}>
                             Logging
                         </Tabs.Tab>}
-                        {props.user.role === "TEACHER" && <Tabs.Tab value="Settings" leftSection={<IconSettings className="size-3" />}>
+                        {user?.role === "TEACHER" && <Tabs.Tab value="Settings" leftSection={<IconSettings className="size-3" />}>
                             Settings
                         </Tabs.Tab>}
 
                     </Tabs.List>
-                </Tabs>
+                </Tabs>}
             </Container>
         </div>
     )
 }
+

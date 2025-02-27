@@ -14,6 +14,8 @@ import Auth from './pages/Auth.tsx';
 import Dashboard from './pages/Dashboard.tsx';
 import JoinClass from './pages/JoinClass.tsx';
 import CreateClass from './pages/CreateClass.tsx';
+import UserSettings from './pages/UserSettings.tsx';
+import BaseApp from './BaseApp.tsx';
 
 
 
@@ -22,36 +24,47 @@ const router = createBrowserRouter([
     path: "/",
     element: <App />,
     errorElement: <ErrorPage />,
-    
+
     children: [
       {
         path: "test",
         element: <Test />,
       },
       {
-        path: 'dashboard',
-        element: <Dashboard/>,
+        path: '/',
+        element: <Dashboard />,
       },
-      {
-        path: 'class/join',
-        element: <JoinClass />,
-      },
+
       {
         path: 'class/new',
         element: <CreateClass />
-
-      }
-
+      },
     ]
   },
   {
     path: "/login",
-    element: <Auth />
+    element: <Auth />,
+    errorElement: <ErrorPage />,
   },
   {
     path: "/signup",
-    element: <Auth />
-  }
+    element: <Auth />,
+    errorElement: <ErrorPage />,
+  },
+  {
+    element: <BaseApp />,
+    errorElement: <ErrorPage />,
+    children: [
+      {
+        path: '/class/join',
+        element: <JoinClass />
+      },
+      {
+        path: '/settings',
+        element: <UserSettings />
+      }
+    ]
+  },
 ]);
 
 const theme = createTheme({
@@ -60,8 +73,8 @@ const theme = createTheme({
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-     <MantineProvider theme={theme}>
-       <RouterProvider router={router} />
-     </MantineProvider>
+    <MantineProvider theme={theme}>
+      <RouterProvider router={router} />
+    </MantineProvider>
   </React.StrictMode>,
 )

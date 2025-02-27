@@ -158,7 +158,7 @@ export default function Auth() {
         setLoading(true);
         try {
             const res = await axios.post(serverUrl + "/user/login", values, { withCredentials: true });
-            if (res.data) 
+            if (res.data)
                 navigate('/');
         } catch (err) {
             let errorMessage: string;

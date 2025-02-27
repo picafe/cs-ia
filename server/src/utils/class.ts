@@ -30,16 +30,17 @@ export async function createClass(params: Class): Promise<Class> {
 
 export async function joinClass(params: {
   userId: number;
-  classId: number;
-}): Promise<void> {
-  await prisma.studentUser.update({
+  classCode: string;
+}): Promise<any> {
+  const res = await prisma.studentUser.update({
     where: { userId: params.userId },
     data: {
       class: {
         connect: {
-          id: params.classId,
+          code: params.classCode,
         },
       },
     },
   });
+  return res;
 }
