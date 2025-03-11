@@ -16,12 +16,9 @@ export default function Dashboard() {
   //         console.error(error);
   //     }
   // }
-return (
-  <>
-    {user.role === "TEACHER" ? <TeacherDashboard /> : <StudentDashBoard />}
-  </>
-)
-
-
-
+  return (
+    <>
+      {user.role === "TEACHER" ? <TeacherDashboard /> : <StudentDashBoard />}
+    </>
+  );
 }

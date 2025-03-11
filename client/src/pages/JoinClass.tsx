@@ -11,7 +11,6 @@ export default function JoinClass() {
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  
 
   const code = useField({
     initialValue: "",
@@ -25,8 +24,9 @@ export default function JoinClass() {
       const res = await axios.post(serverUrl + "/class/join", { code: code }, {
         withCredentials: true,
       });
-      if (res.data.success)
+      if (res.data.success) {
         navigate("/");
+      }
     } catch (err) {
       let errorMessage: string;
       if (axios.isAxiosError(err) && err.response) {

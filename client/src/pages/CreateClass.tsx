@@ -51,7 +51,7 @@ export default function CreateClass() {
     } catch (err) {
       let errorMessage: string;
       if (axios.isAxiosError(err) && err.response) {
-        errorMessage = err.response.data.error
+        errorMessage = err.response.data.error;
       } else {
         errorMessage = "Something unexpected happened! Please contact support.";
         setErrorMessage("Login failed: " + errorMessage);
