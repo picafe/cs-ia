@@ -3,7 +3,15 @@ import { prisma } from "../db";
 import { generateRandomString } from "@oslojs/crypto/random";
 import type { RandomReader } from "@oslojs/crypto/random";
 
-export async function createClass(params: Class): Promise<Class> {
+type ClassQuery = {
+  name: string;
+  courseCode: string;
+  description: string;
+  endDate: Date;
+  teacherId: number;
+}
+
+export async function createClass(params: ClassQuery): Promise<Class> {
   const random: RandomReader = {
     read(bytes) {
       crypto.getRandomValues(bytes);
@@ -12,8 +20,6 @@ export async function createClass(params: Class): Promise<Class> {
 
   const alphabet = "abcdefghijklmnopqrstuvwxyz1234567890"
   const code = generateRandomString(random, alphabet, 6);
-  console.log(params)
-
 
   const cls = await prisma.class.create({
     data: {

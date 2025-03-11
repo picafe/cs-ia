@@ -1,4 +1,4 @@
-import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import Footer from "./components/Footer";
@@ -10,14 +10,13 @@ function BaseApp() {
   const navigate = useNavigate();
   const [user, setUser] = useState<User>();
   const [loading, setLoading] = useState(true);
-  let location = useLocation();
 
   const fetchSession = async () => {
     try {
       const response = await axios.get("http://localhost:3000/user/session", {
         withCredentials: true,
       });
-      setUser(response.data);
+      setUser(response.data.data.user);
     } catch (err) {
       if (axios.isAxiosError(err) && err.response?.status === 401) {
         navigate("/login");

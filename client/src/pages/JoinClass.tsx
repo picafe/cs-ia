@@ -4,11 +4,14 @@ import axios from "axios";
 import { useState } from "react";
 import Logo from "../icons/Logo";
 import { IconExclamationCircle } from "@tabler/icons-react";
+import { useNavigate } from "react-router-dom";
 
 export default function JoinClass() {
   const serverUrl = import.meta.env.VITE_SERVER_URL;
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  
 
   const code = useField({
     initialValue: "",
@@ -19,17 +22,19 @@ export default function JoinClass() {
   const joinClass = async () => {
     setLoading(true);
     try {
-      const res = await axios.post(serverUrl + "/class/join", code, {
+      const res = await axios.post(serverUrl + "/class/join", { code: code }, {
         withCredentials: true,
       });
+      if (res.data.success)
+        navigate("/");
     } catch (err) {
       let errorMessage: string;
       if (axios.isAxiosError(err) && err.response) {
-        errorMessage = err.response.data;
+        errorMessage = err.response.data.error || "Failed to join class";
       } else {
         errorMessage = "Something unexpected happened! Please contact support.";
       }
-      setErrorMessage("Login failed: " + errorMessage);
+      setErrorMessage("Join failed: " + errorMessage);
     } finally {
       setLoading(false);
     }

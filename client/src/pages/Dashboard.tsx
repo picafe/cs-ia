@@ -1,17 +1,10 @@
-import axios from "axios";
-import { useEffect, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { User } from "../types";
+import TeacherDashboard from "../components/TeacherDashboard";
+import StudentDashBoard from "../components/StudentDashboard";
 
 export default function Dashboard() {
-  const [loading, setLoading] = useState(false);
-  const serverUrl = import.meta.env.VITE_SERVER_URL;
   const user: User = useOutletContext();
-
-  useEffect(() => {
-    // getClasses();
-    console.log(user);
-  });
 
   // const getClasses = async () => {
   //     setLoading(true);
@@ -23,5 +16,12 @@ export default function Dashboard() {
   //         console.error(error);
   //     }
   // }
-  return <div></div>;
+return (
+  <>
+    {user.role === "TEACHER" ? <TeacherDashboard /> : <StudentDashBoard />}
+  </>
+)
+
+
+
 }

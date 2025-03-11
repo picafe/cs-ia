@@ -1,4 +1,4 @@
-import express, { Request, Response } from "express";
+import express, { Request, Response, NextFunction } from "express";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import { checkEmailAvailability, verifyEmailInput } from "./utils/email";
@@ -25,11 +25,11 @@ import { createClass, joinClass } from "./utils/class";
 dotenv.config();
 const app = express();
 
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 3000; // Added default port
 
 const corsOptions = {
-  origin: "http://127.0.0.1:5173",
-  optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
+  origin: process.env.FRONTEND_URL || "http://127.0.0.1:5173",
+  optionsSuccessStatus: 200,
   credentials: true,
 };
 
@@ -46,13 +46,7 @@ interface AppLocals {
   user: string;
 }
 
-app.get("/", async (request: Request, response: Response) => {
-  console.log(request.cookies["cookieName"]);
-  let a = request.app.locals.userId;
-
-  response.status(200).send(a);
-});
-
+// Input validation interfaces
 interface UserQuery {
   email: string;
   name: string;
@@ -65,26 +59,60 @@ interface LoginQuery {
   password: string;
 }
 
-app.use(async (req, res, next) => {
-  if(req.originalUrl === "/user/create" || req.originalUrl === "/user/login") {
+interface ClassJoinQuery {
+  code: string;
+}
+
+interface ClassCreateQuery {
+  name: string;
+  courseCode: string;
+  description: string;
+  endDate: Date;
+}
+
+// Authentication middleware
+app.use(async (req: Request, res: Response, next: NextFunction) => {
+  // Public routes that don't require authentication
+  const publicRoutes = ["/user/create", "/user/login"];
+
+  if (publicRoutes.includes(req.originalUrl)) {
     next();
     return;
   }
-  
-  const token = req.signedCookies["session"] ?? null;
-  if (token === null) {
-    res.locals.userId = null;
-    res.locals.user = null;
-    res.status(401).send("Unauthorized");
+
+  const token = req.signedCookies["session"];
+  if (!token) {
+    res.status(401).json({
+      success: false,
+      error: "Authentication required",
+    });
     return;
   }
 
-  const { session, user } = await validateSessionToken(token);
-  req.app.locals.user = user;
-  req.app.locals.session = session;
+  try {
+    const { session, user } = await validateSessionToken(token);
 
-  if (session !== null) {
-    // Only sets cookie if it's about to expire
+    if (!session || !user) {
+      res.clearCookie("session", {
+        httpOnly: true,
+        path: "/",
+        secure: (process.env.NODE_ENV || "development") !== "development",
+        sameSite: "lax",
+        signed: true,
+      });
+
+      res.status(401).json({
+        success: false,
+        error: "Invalid or expired session",
+      });
+      return;
+    }
+
+    // Store user info
+    req.app.locals.user = user;
+    req.app.locals.session = session;
+
+    // Refresh cookie if expiring soon
     const oneHour = 60 * 60 * 1000;
     if (session.expiresAt.getTime() - Date.now() < oneHour) {
       res.cookie("session", token, {
@@ -96,194 +124,371 @@ app.use(async (req, res, next) => {
         signed: true,
       });
     }
-  } else {
-    if (token) {
-      res.cookie("session", "", {
-        httpOnly: true,
-        path: "/",
-        secure: (process.env.NODE_ENV || "development") !== "development",
-        sameSite: "lax",
-        maxAge: 0,
-        signed: true,
-      });
-    }
+
+    next();
+  } catch (error) {
+    console.error("Authentication error:", error);
+    res.status(500).json({
+      success: false,
+      error: "Authentication failed",
+    });
+    return;
   }
-  
-  next();
+});
+
+// Global error handler
+app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+  console.error("Unhandled error:", err);
+  res.status(500).json({
+    success: false,
+    error: "Internal server error",
+  });
+});
+
+
+app.get("/user/session", (req: Request, res: Response) => {
+  res.status(200).json({
+    success: true,
+    data: {user: {name: req.app.locals.user.name, role: req.app.locals.user.role}},
+  });
 });
 
 app.post(
   "/user/create",
-  async (request: Request<{}, {}, UserQuery>, response: Response) => {
-    const { email, name, password, role } = request.body;
-    // validate input
-    if (
-      !name || !email || !password || !role ||
-      typeof name !== "string" ||
-      !verifyEmailInput(email) ||
-      !verifyPasswordStrength(password) ||
-      (role !== Role.STUDENT && role !== Role.TEACHER)
-    ) {
-      response.status(400).send("Invalid or missing fields");
+  async (req: Request<{}, {}, UserQuery>, res: Response) => {
+    try {
+      const { email, name, password, role } = req.body;
+
+      // Input validation
+      if (!email || !name || !password || !role) {
+        res.status(400).json({
+          success: false,
+          error: "All fields are required",
+        });
+        return;
+      }
+
+      if (!verifyNameInput(name)) {
+        res.status(400).json({
+          success: false,
+          error: "Invalid name format",
+        });
+        return;
+      }
+
+      if (!verifyEmailInput(email)) {
+        res.status(400).json({
+          success: false,
+          error: "Invalid email format or domain",
+        });
+        return;
+      }
+
+      if (!verifyPasswordStrength(password)) {
+        res.status(400).json({
+          success: false,
+          error:
+            "Password must be at least 8 characters and include uppercase, lowercase, numbers, and special characters",
+        });
+        return;
+      }
+
+      if (role !== Role.STUDENT && role !== Role.TEACHER) {
+        res.status(400).json({
+          success: false,
+          error: "Invalid role specified",
+        });
+        return;
+      }
+
+      // Check email availability
+      const emailAvailable = await checkEmailAvailability(email);
+      if (!emailAvailable) {
+        res.status(400).json({
+          success: false,
+          error: "Email is already in use",
+        });
+        return;
+      }
+
+      // Create user and session
+      const user = await createUser(email, name, password, role);
+      const sessionToken = generateSessionToken();
+      const session = await createSession(sessionToken, user.id);
+
+      // Set cookie
+      res.cookie("session", sessionToken, {
+        httpOnly: true,
+        path: "/",
+        secure: (process.env.NODE_ENV || "development") !== "development",
+        sameSite: "lax",
+        expires: session.expiresAt,
+        signed: true,
+      });
+
+      res.status(200).json({
+        success: true,
+        data: { message: "User created successfully" },
+      });
+      return;
+    } catch (error) {
+      console.error("User creation error:", error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to create user",
+      });
       return;
     }
-    if (!(await checkEmailAvailability(email))) {
-      response.status(400).send("Email is already in use");
-      return;
-    }
-    const user = await createUser(email, name, password, role);
-    const sessionToken = generateSessionToken();
-    const session = await createSession(sessionToken, user.id);
-    response.cookie("session", sessionToken, {
-      httpOnly: true,
-      path: "/",
-      secure: (process.env.NODE_ENV || "development") !== "development",
-      sameSite: "lax",
-      expires: session.expiresAt,
-      signed: true,
-    });
-    response.status(200).send(true);
   }
 );
 
 app.post(
   "/user/login",
   async (req: Request<{}, {}, LoginQuery>, res: Response) => {
-    const { email, password } = req.body;
-    const user = await getUserFromEmail(email);
-    if (user === null) {
-      res.status(400).send("User not found");
+    try {
+      const { email, password } = req.body;
+
+      // Input validation
+      if (!email || !password) {
+        res.status(400).json({
+          success: false,
+          error: "Email and password are required",
+        });
+        return;
+      }
+
+      // Find user
+      const user = await getUserFromEmail(email);
+      if (!user) {
+        res.status(401).json({
+          success: false,
+          error: "Invalid credentials",
+        });
+        return;
+      }
+
+      // Verify password
+      const passwordHash = await getUserPasswordHash(user.id);
+      const validPassword = await verifyPasswordHash(passwordHash, password);
+
+      if (!validPassword) {
+        res.status(401).json({
+          success: false,
+          error: "Invalid credentials",
+        });
+        return;
+      }
+
+      // Create session
+      const sessionToken = generateSessionToken();
+      const session = await createSession(sessionToken, user.id);
+
+      // Set cookie
+      res.cookie("session", sessionToken, {
+        httpOnly: true,
+        path: "/",
+        secure: (process.env.NODE_ENV || "development") !== "development",
+        sameSite: "lax",
+        expires: session.expiresAt,
+        signed: true,
+      });
+
+      res.status(200).json({
+        success: true,
+        data: { message: "Login successful" },
+      });
+      return;
+    } catch (error) {
+      console.error("Login error:", error);
+      res.status(500).json({
+        success: false,
+        error: "Login failed",
+      });
       return;
     }
-    const passwordHash = await getUserPasswordHash(user!.id);
-    const validPassword = await verifyPasswordHash(passwordHash, password);
-    if (!validPassword) {
-      res.status(400).send("Invalid password");
-      return;
-    }
-    const sessionToken = generateSessionToken();
-    const session = await createSession(sessionToken, user!.id);
-    res.cookie("session", sessionToken, {
-      httpOnly: true,
-      path: "/",
-      secure: (process.env.NODE_ENV || "development") !== "development",
-      sameSite: "lax",
-      expires: session.expiresAt,
-      signed: true
-    });
-    res.status(200).send(true);
   }
 );
 
 app.post("/user/logout", async (req: Request, res: Response) => {
-  invalidateSession(req.signedCookies["session"]);
-  res.cookie("session", "", {
-    httpOnly: true,
-    path: "/",
-    secure: (process.env.NODE_ENV || "development") !== "development",
-    sameSite: "lax",
-    maxAge: 0,
-  });
-  res.status(204).send(true);
-});
+  try {
+    const token = req.signedCookies["session"];
+    if (token) {
+      await invalidateSession(token);
+    }
 
-app.get("/password/reset", async (req: Request, res: Response) => {});
+    res.clearCookie("session", {
+      httpOnly: true,
+      path: "/",
+      secure: (process.env.NODE_ENV || "development") !== "development",
+      sameSite: "lax",
+      signed: true,
+    });
 
-app.get("/user/session", async (req: Request, res: Response) => {
-  const token = req.signedCookies["session"] ?? null;
-  if (token == null) {
-    res.status(401).send("Invalid session token");
+    res.status(200).json({
+      success: true,
+      data: { message: "Logout successful" },
+    });
+    return;
+  } catch (error) {
+    console.error("Logout error:", error);
+    res.status(500).json({
+      success: false,
+      error: "Logout failed",
+    });
     return;
   }
-  const result = await validateSessionToken(token);
-  if (result.session === null) {
-    res.clearCookie("session");
-    res.status(401).send("Invalid session token");
-    return;
-  }
-  res.status(200).send(result.user);
 });
 
 app.get("/user/classes", async (req: Request, res: Response) => {
-  const result = await getUserClasses(req.app.locals.userId);
-  if (result === null) {
-    res.status(404).send("You are not enrolled in any classes.");
-    return;
-  } else {
-    res.status(200).send(result);
-  }
-});
-
-app.get("/user/role", async (req: Request, res: Response) => {});
-
-
-app.post("/class/join", async (req: Request, res: Response) => {
   try {
-    if (req.app.locals.user.role !== "STUDENT") {
-      res.status(403).send("Unauthorized");
-      return;
-    }
 
-    if (!req.body || !req.body.code) {
-      res.status(400).send("Invalid request body");
-      return;
-    }
+    const classes = await getUserClasses(req.app.locals.user.id);
 
-    const result = await joinClass({
-      classCode: req.body.code,
-      userId: req.app.locals.user.id,
+    res.status(200).json({
+      success: true,
+      data: classes || [],
     });
-
-    if (!result) {
-      res.status(404).send("Class not created");
-      return;
-    }
-    res.status(200).json(result)
     return;
-
   } catch (error) {
-    res.status(500).send("Internal server error");
-    console.error(error);
+    console.error("Error fetching classes:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to retrieve classes",
+    });
     return;
   }
 });
 
-app.post("/class/create", async (req: Request, res: Response) => {
-  try{
-    if (req.app.locals.user.role !== "TEACHER") {
-      res.status(403).send("Unauthorized");
+app.post(
+  "/class/join",
+  async (req: Request<{}, {}, ClassJoinQuery>, res: Response) => {
+    try {
+      const user = req.app.locals.user;
+
+      // Authorization check
+      if (!user || user.role !== "STUDENT") {
+        res.status(403).json({
+          success: false,
+          error: "Only students can join classes",
+        });
+        return;
+      }
+
+      // Input validation
+      const { code } = req.body;
+      if (!code || typeof code !== "string" || code.length !== 6) {
+        res.status(400).json({
+          success: false,
+          error: "Valid class code is required",
+        });
+        return;
+      }
+
+      // Join class
+      const result = await joinClass({
+        classCode: code,
+        userId: user.id,
+      });
+
+      res.status(200).json({
+        success: true,
+        data: result,
+      });
+      return;
+    } catch (error) {
+      console.error("Class join error:", error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to join class",
+      });
       return;
     }
-
-    if (!req.body || !req.body.name) {
-      res.status(400).send("Invalid request body");
-      return;
-    }
-
-    const result = await createClass({
-      ...req.body,
-      teacherId: req.app.locals.user.id,
-    });
-
-    if (!result) {
-      res.status(404).send("Class not created");
-      return;
-    }
-    res.status(200).json(result)
-    return;
-
-  } catch (error) {
-    res.status(500).send("Internal server error");
-    console.error(error);
-    return;
   }
-});
+);
 
+app.post(
+  "/class/create",
+  async (req: Request<{}, {}, ClassCreateQuery>, res: Response) => {
+    try {
+      const user = req.app.locals.user;
+
+      // Authorization check
+      if (!user || user.role !== "TEACHER") {
+        res.status(403).json({
+          success: false,
+          error: "Only teachers can create classes",
+        });
+        return;
+      }
+
+      // Input validation
+      const { name, courseCode, description, endDate } = req.body;
+
+      if (!name || typeof name !== "string" || name.trim().length === 0) {
+        res.status(400).json({
+          success: false,
+          error: "Class name is required",
+        });
+        return;
+      }
+
+      if (
+        courseCode &&
+        (typeof courseCode !== "string" || courseCode.length > 20)
+      ) {
+        res.status(400).json({
+          success: false,
+          error: "Course code must be a valid string under 20 characters",
+        });
+        return;
+      }
+
+      if (
+        description &&
+        (typeof description !== "string" || description.length > 500)
+      ) {
+        res.status(400).json({
+          success: false,
+          error: "Description must be under 500 characters",
+        });
+        return;
+      }
+
+      if (endDate && isNaN(new Date(endDate).getTime())) {
+        res.status(400).json({
+          success: false,
+          error: "End date must be a valid date",
+        });
+        return;
+      }
+
+      const result = await createClass({
+        ...req.body,
+        teacherId: user.id,
+      });
+
+      res.status(200).json({
+        success: true,
+        data: result,
+      });
+      return;
+    } catch (error) {
+      console.error("Class creation error:", error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to create class",
+      });
+      return;
+    }
+  }
+);
+
+// Start server with error handling
 app
   .listen(PORT, () => {
-    console.log("Server running at PORT: ", PORT);
+    console.log("Server running at PORT:", PORT);
   })
   .on("error", (error) => {
-    // gracefully handle error
-    throw new Error(error.message);
+    console.error("Server startup error:", error);
+    process.exit(1);
   });

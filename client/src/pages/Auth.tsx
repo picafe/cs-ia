@@ -228,7 +228,7 @@ export default function Auth() {
     } catch (err) {
       let errorMessage: string;
       if (axios.isAxiosError(err) && err.response) {
-        errorMessage = err.response.data;
+        errorMessage = err.response.data.error;
       } else {
         errorMessage = "Something unexpected happened! Please contact support.";
       }
@@ -250,7 +250,7 @@ export default function Auth() {
     } catch (err) {
       let errorMessage: string;
       if (axios.isAxiosError(err) && err.response) {
-        errorMessage = err.response.data;
+        errorMessage = err.response.data.error
       } else {
         errorMessage = "Something unexpected happened! Please contact support.";
       }

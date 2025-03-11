@@ -26,10 +26,9 @@ import { User } from "../types";
 
 interface NavbarProps {
   user: User | undefined;
-  menuBar: boolean;
 }
 
-export default function Navbar({ user, menuBar }: NavbarProps) {
+export default function Navbar({ user }: NavbarProps) {
   const navigate = useNavigate();
   const { setColorScheme } = useMantineColorScheme();
   const computedColorScheme = useComputedColorScheme("light", {
@@ -122,36 +121,6 @@ export default function Navbar({ user, menuBar }: NavbarProps) {
             </ActionIcon>
           </Group>
         </Group>
-      </Container>
-      <Container fluid className="justify-center">
-        {menuBar ? null : (
-          <Tabs defaultValue="Feed">
-            <Tabs.List style={{ justifyContent: "center" }}>
-              <Tabs.Tab
-                value="Feed"
-                leftSection={<IconHome className="size-3" />}
-              >
-                Home
-              </Tabs.Tab>
-              {user?.role === "STUDENT" && (
-                <Tabs.Tab
-                  value="Logging"
-                  leftSection={<IconLogs className="size-3" />}
-                >
-                  Logging
-                </Tabs.Tab>
-              )}
-              {user?.role === "TEACHER" && (
-                <Tabs.Tab
-                  value="Settings"
-                  leftSection={<IconSettings className="size-3" />}
-                >
-                  Settings
-                </Tabs.Tab>
-              )}
-            </Tabs.List>
-          </Tabs>
-        )}
       </Container>
     </div>
   );

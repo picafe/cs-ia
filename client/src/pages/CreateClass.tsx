@@ -45,11 +45,13 @@ export default function CreateClass() {
       const res = await axios.post(serverUrl + "/class/create", values, {
         withCredentials: true,
       });
-      setCode(res.data.code);
+      if (res.data.success) {
+        setCode(res.data.data.code);
+      }
     } catch (err) {
       let errorMessage: string;
       if (axios.isAxiosError(err) && err.response) {
-        errorMessage = err.response.data;
+        errorMessage = err.response.data.error
       } else {
         errorMessage = "Something unexpected happened! Please contact support.";
         setErrorMessage("Login failed: " + errorMessage);
