@@ -1,10 +1,12 @@
-import { useOutletContext } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router-dom";
 import { User } from "../types";
 import TeacherDashboard from "../components/TeacherDashboard";
 import StudentDashBoard from "../components/StudentDashboard";
 
 export default function Dashboard() {
   const user: User = useOutletContext();
+  const navigate = useNavigate();
+
 
   // const getClasses = async () => {
   //     setLoading(true);
@@ -18,7 +20,15 @@ export default function Dashboard() {
   // }
   return (
     <>
-      {user.role === "TEACHER" ? <TeacherDashboard /> : <StudentDashBoard />}
+      {user.role === "TEACHER" ?
+        <>
+          <TeacherDashboard />
+        </>
+        :
+        <>
+          <StudentDashBoard />
+        </>
+      }
     </>
   );
 }

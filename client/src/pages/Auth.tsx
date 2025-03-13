@@ -43,18 +43,18 @@ export default function Auth() {
   const [selected, setSelected] = useState("login");
   const serverUrl = import.meta.env.VITE_SERVER_URL;
 
-  // If the user is authenticated, it redirects them to login page, also checks if the backend is offline
+  // If the user is authenticated, redirect to login page; also checks if the backend is offline
   const fetchSession = async () => {
-    await axios.get(serverUrl + "/user/session", { withCredentials: true })
-      .then((res) => {
-        if (res.data) navigate("/");
-      })
-      .catch((err) => {
-        if (err.response && err.response.status === 401) return;
-        else {window.alert(
-            "An unexpected error occurred. Please try again later.",
-          );}
+    try {
+      const response = await axios.get("http://localhost:3000/user/session", {
+        withCredentials: true,
       });
+      if (response.data.data.user)
+        navigate("/");
+    } catch (err) {
+      if (!(axios.isAxiosError(err) && err.response?.status === 401))
+        window.alert("An unexpected error occurred. Please try again later.");
+    }
   };
 
   useEffect(() => {
@@ -90,7 +90,7 @@ export default function Auth() {
       password: (
         val,
       ) => (val.length <= 8 && /[0-9]/.test(val) && /[a-z]/.test(val) &&
-          /[A-Z]/.test(val) && /[$&+,:;=?@#|'<>.^*()%!-]/.test(val)
+        /[A-Z]/.test(val) && /[$&+,:;=?@#|'<>.^*()%!-]/.test(val)
         ? "Password does not meet the requirements"
         : null),
     },
@@ -110,13 +110,13 @@ export default function Auth() {
       email: (
         val,
       ) => (/^\S+\.+\S+@(student\.)?tdsb\.on\.ca+$/.test(val) &&
-          val.length < 256
+        val.length < 256
         ? null
         : "Invalid email entered"),
       password: (
         val,
       ) => (val.length >= 8 && /[0-9]/.test(val) && /[a-z]/.test(val) &&
-          /[A-Z]/.test(val) && /[$&+,:;=?@#|'<>.^*()%!-]/.test(val)
+        /[A-Z]/.test(val) && /[$&+,:;=?@#|'<>.^*()%!-]/.test(val)
         ? null
         : "Password does not meet the requirements"),
       confirmPassword: (
@@ -263,8 +263,8 @@ export default function Auth() {
   return (
     <div className="flex flex-row max-h-screen">
       <div className="w-2/5">
-        <div className="h-full w-full flex flex-col justify-center items-center p-16 overflow-y-scroll">
-          <div className="text-5xl font-bold w-full mt-24">
+        <div className="h-full w-full flex flex-col justify-center items-center p-16 overflow-y-scroll my-auto">
+          <div className={`text-5xl font-bold w-full ${location.pathname === "/login" ? "pt-4" : "pt-20"}`}>
             <h1 style={{ fontSize: "3rem" }}>
               Welcome to <br />
               <span className="flex justify-center items-center mt-4">

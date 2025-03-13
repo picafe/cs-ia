@@ -13,6 +13,7 @@ import JoinClass from "./pages/JoinClass.tsx";
 import CreateClass from "./pages/CreateClass.tsx";
 import UserSettings from "./pages/UserSettings.tsx";
 import BaseApp from "./BaseApp.tsx";
+import TeacherSettings from "./pages/TeacherSettings.tsx";
 
 const router = createBrowserRouter([
   {
@@ -28,12 +29,19 @@ const router = createBrowserRouter([
       {
         path: "/",
         element: <Dashboard />,
+        children: [
+          {
+            path: "teacher/settings",
+            element: <TeacherSettings />,
+          },
+        ]
       },
 
       {
         path: "class/new",
         element: <CreateClass />,
       },
+     
     ],
   },
   {

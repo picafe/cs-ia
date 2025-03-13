@@ -20,15 +20,15 @@ import {
 } from "./utils/session";
 import { authMiddleware } from "./middleware";
 import { Role } from "@prisma/client";
-import { createClass, joinClass } from "./utils/class";
+import { createClass, getAllClasses, joinClass } from "./utils/class";
 
 dotenv.config();
 const app = express();
 
-const PORT = process.env.PORT || 3000; // Added default port
+const PORT = process.env.PORT || 3000;
 
 const corsOptions = {
-  origin: process.env.FRONTEND_URL || "http://127.0.0.1:5173",
+  origin: process.env.FRONTEND_URL || "http://localhost:5173",
   optionsSuccessStatus: 200,
   credentials: true,
 };
@@ -72,7 +72,7 @@ interface ClassCreateQuery {
 
 // Authentication middleware
 app.use(async (req: Request, res: Response, next: NextFunction) => {
-  // Public routes that don't require authentication
+  // routes which don't require authentication
   const publicRoutes = ["/user/create", "/user/login"];
 
   if (publicRoutes.includes(req.originalUrl)) {
@@ -405,6 +405,36 @@ app.post(
     }
   }
 );
+
+app.get("/classes", async (req: Request, res: Response) => {
+  try {
+    const user = req.app.locals.user;
+
+    if (!user || user.role !== "TEACHER") {
+      res.status(403).json({
+        success: false,
+        error: "Only teachers can view all classes",
+      });
+      return;
+    }
+
+    const classes = await getAllClasses();
+
+    res.status(200).json({
+      success: true,
+      data: classes || [],
+    });
+    return;
+  }
+  catch (error) {
+    console.error("Error fetching classes:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to retrieve classes",
+    });
+    return;
+  }
+});
 
 app.post(
   "/class/create",

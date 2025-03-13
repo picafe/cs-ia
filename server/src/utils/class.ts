@@ -50,3 +50,30 @@ export async function joinClass(params: {
   });
   return res;
 }
+
+export async function getAllClasses(): Promise<Class[]> {
+  return await prisma.class.findMany({
+    include: {
+      students: {
+        include: {
+          user: {
+            select: {
+              name: true,
+              email: true,
+            },
+          },
+        }
+      },
+      TeacherUser: {
+        include: {
+          user: {
+            select: {
+              name: true,
+              email: true,
+            },
+          },
+        }
+      },
+    },
+  });
+}

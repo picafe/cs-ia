@@ -18,7 +18,6 @@ function App() {
         withCredentials: true,
       });
       setUser(response.data.data.user);
-      console.log(response.data.data);
     } catch (err) {
       if (axios.isAxiosError(err) && err.response?.status === 401) {
         navigate("/login");

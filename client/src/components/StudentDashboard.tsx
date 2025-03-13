@@ -1,18 +1,34 @@
 import { Container, Tabs } from "@mantine/core";
 import { IconHome, IconLogs } from "@tabler/icons-react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import Test from "./Test";
 
 export default function StudentDashBoard() {
   const navigate = useNavigate();
-  const { tabValue } = useParams();
+  let location = useLocation();
+
+  const [activeTab, setActiveTab] = useState<string | null>('home');
+
+
+  useEffect(() => {
+    if (location.pathname === "/student/logging") setActiveTab("logging");
+    else setActiveTab("home");
+  }, [location]);
+
+  // Handles the navigation between home and logging
+  const handleNavChange = (value: string | null) => {
+    setActiveTab(value || "home");
+    if (value === "logging") navigate("/teacher/logging");
+    else navigate("/");
+  };
   return (
     <>
       <Container fluid className="justify-center">
         <Tabs
           defaultValue="home"
-          value={tabValue}
-          onChange={(value) =>
-            value === "home" ? navigate("/") : navigate(`/student/${value}`)}
+          value={activeTab}
+          onChange={handleNavChange}
         >
           <Tabs.List style={{ justifyContent: "center" }}>
             <Tabs.Tab
@@ -29,11 +45,17 @@ export default function StudentDashBoard() {
               Logging
             </Tabs.Tab>
           </Tabs.List>
+
+          <Tabs.Panel value="home">
+            <div>
+              <h1>Home</h1>
+            </div>
+          </Tabs.Panel>
+          <Tabs.Panel value="logging">
+            <Test />
+          </Tabs.Panel>
         </Tabs>
       </Container>
-      <div>
-        <h1>Student Dashboard</h1>
-      </div>
     </>
   );
 }
