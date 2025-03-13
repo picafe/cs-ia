@@ -7,7 +7,6 @@ export default function Dashboard() {
   const user: User = useOutletContext();
   const navigate = useNavigate();
 
-
   // const getClasses = async () => {
   //     setLoading(true);
   //     try {
@@ -20,15 +19,17 @@ export default function Dashboard() {
   // }
   return (
     <>
-      {user.role === "TEACHER" ?
-        <>
-          <TeacherDashboard />
-        </>
-        :
-        <>
-          <StudentDashBoard />
-        </>
-      }
+      {user.role === "TEACHER"
+        ? (
+          <>
+            <TeacherDashboard />
+          </>
+        )
+        : (
+          <>
+            <StudentDashBoard />
+          </>
+        )}
     </>
   );
 }

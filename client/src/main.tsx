@@ -34,14 +34,13 @@ const router = createBrowserRouter([
             path: "teacher/settings",
             element: <TeacherSettings />,
           },
-        ]
+        ],
       },
 
       {
         path: "class/new",
         element: <CreateClass />,
       },
-     
     ],
   },
   {

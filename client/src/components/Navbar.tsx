@@ -57,7 +57,11 @@ export default function Navbar({ user }: NavbarProps) {
     <div>
       <Container fluid>
         <Group justify="space-between">
-          <Link to="/" className="no-underline text-black dark:text-gray-100" viewTransition>
+          <Link
+            to="/"
+            className="no-underline text-black dark:text-gray-100"
+            viewTransition
+          >
             <Group gap={4}>
               <Logo />
               <Text size="xl" fw={700}>LearnLog</Text>

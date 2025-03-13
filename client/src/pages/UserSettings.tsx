@@ -76,7 +76,11 @@ export default function UserSettings() {
       <nav className={classes.navbar}>
         <div className={classes.navbarMain}>
           <Group className={classes.header} justify="space-between">
-            <Link to="/" className="no-underline text-black dark:text-gray-100" viewTransition>
+            <Link
+              to="/"
+              className="no-underline text-black dark:text-gray-100"
+              viewTransition
+            >
               <span className="flex justify-center gap-0.5 items-center text-2xl font-bold ">
                 <Logo size={28} /> LearnLog
               </span>

@@ -7,7 +7,7 @@ import TeacherSettings from "../pages/TeacherSettings";
 export default function TeacherDashboard() {
   const navigate = useNavigate();
   let location = useLocation();
-  const [activeTab, setActiveTab] = useState<string | null>('home');
+  const [activeTab, setActiveTab] = useState<string | null>("home");
 
   useEffect(() => {
     if (location.pathname === "/teacher/settings") setActiveTab("settings");
@@ -58,10 +58,7 @@ export default function TeacherDashboard() {
             <TeacherSettings />
           </Tabs.Panel>
         </Tabs>
-
       </Container>
-
-
     </>
   );
 }

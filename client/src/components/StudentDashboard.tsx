@@ -8,8 +8,7 @@ export default function StudentDashBoard() {
   const navigate = useNavigate();
   let location = useLocation();
 
-  const [activeTab, setActiveTab] = useState<string | null>('home');
-
+  const [activeTab, setActiveTab] = useState<string | null>("home");
 
   useEffect(() => {
     if (location.pathname === "/student/logging") setActiveTab("logging");

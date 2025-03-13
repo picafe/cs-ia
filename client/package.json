@@ -8,7 +8,7 @@
     "build": "deno check && vite build",
     "lint": "deno lint",
     "preview": "vite preview",
-    "format": "/home/codespace/.deno/bin/deno fmt",
+    "format": "/home/surya/.deno/bin/deno fmt",
     "prepare": "cd .. && husky client/.husky"
   },
   "dependencies": {
