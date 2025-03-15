@@ -10,10 +10,11 @@ function BaseApp() {
   const navigate = useNavigate();
   const [user, setUser] = useState<User>();
   const [loading, setLoading] = useState(true);
+  const serverUrl = import.meta.env.VITE_SERVER_URL;
 
   const fetchSession = async () => {
     try {
-      const response = await axios.get("http://localhost:3000/user/session", {
+      const response = await axios.get(serverUrl + "/user/session", {
         withCredentials: true,
       });
       setUser(response.data.data.user);

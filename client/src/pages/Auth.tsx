@@ -46,7 +46,7 @@ export default function Auth() {
   // If the user is authenticated, redirect to login page; also checks if the backend is offline
   const fetchSession = async () => {
     try {
-      const response = await axios.get("http://localhost:3000/user/session", {
+      const response = await axios.get(serverUrl + "/user/session", {
         withCredentials: true,
       });
       if (response.data.data.user) {
