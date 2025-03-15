@@ -4,7 +4,6 @@ import {
   Container,
   Group,
   Menu,
-  Tabs,
   Text,
   UnstyledButton,
   useComputedColorScheme,
@@ -13,9 +12,7 @@ import {
 import Logo from "../icons/Logo";
 import {
   IconChevronDown,
-  IconHome,
   IconLogout,
-  IconLogs,
   IconMoon,
   IconSettings,
   IconSun,

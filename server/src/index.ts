@@ -6,10 +6,11 @@ import cors from "cors";
 import { verifyPasswordHash, verifyPasswordStrength } from "./utils/password";
 import {
   createUser,
+  editStudentUser,
+  getStudentUserById,
   getUserClasses,
   getUserFromEmail,
   getUserPasswordHash,
-  getUserType,
   verifyNameInput,
 } from "./utils/user";
 import {
@@ -18,9 +19,13 @@ import {
   invalidateSession,
   validateSessionToken,
 } from "./utils/session";
-import { authMiddleware } from "./middleware";
 import { Role } from "@prisma/client";
-import { createClass, getAllClasses, joinClass } from "./utils/class";
+import {
+  createClass,
+  getAllClasses,
+  getClassById,
+  joinClass,
+} from "./utils/class";
 
 dotenv.config();
 const app = express();
@@ -72,7 +77,7 @@ interface ClassCreateQuery {
 
 // Authentication middleware
 app.use(async (req: Request, res: Response, next: NextFunction) => {
-  // routes which don't require authentication
+  // Routes which don't require authentication
   const publicRoutes = ["/user/create", "/user/login"];
 
   if (publicRoutes.includes(req.originalUrl)) {
@@ -145,11 +150,12 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   });
 });
 
-
 app.get("/user/session", (req: Request, res: Response) => {
   res.status(200).json({
     success: true,
-    data: {user: {name: req.app.locals.user.name, role: req.app.locals.user.role}},
+    data: {
+      user: { name: req.app.locals.user.name, role: req.app.locals.user.role },
+    },
   });
 });
 
@@ -341,7 +347,6 @@ app.post("/user/logout", async (req: Request, res: Response) => {
 
 app.get("/user/classes", async (req: Request, res: Response) => {
   try {
-
     const classes = await getUserClasses(req.app.locals.user.id);
 
     res.status(200).json({
@@ -359,13 +364,72 @@ app.get("/user/classes", async (req: Request, res: Response) => {
   }
 });
 
+//UNUSED
+app.get("/user/student/:id", async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const studentId = Number(id);
+    const userType = req.app.locals.user.role;
+
+    if (userType === "TEACHER") {
+      const student = await getStudentUserById(studentId);
+      if (!student) {
+        res.status(404).json({ success: false, message: "Student not found" });
+        return;
+      }
+
+      res.json({ success: true, data: student });
+      return;
+    } else {
+      res.status(403).json({
+        success: false,
+        error: "Only teachers can view student details",
+      });
+      return;
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: "Server error" });
+    return;
+  }
+});
+
+app.post("/user/student/:id", async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const studentId = Number(id);
+    const data = req.body
+    if (req.app.locals.user.role === "TEACHER") {
+      if (!data.status || typeof data.status !== "string" || typeof data.totalHours !== "number" || Number(data.totalHours) < 0) {
+        res.status(400).json({
+          success: false,
+          error: "All fields are required",
+        });
+        return;
+      }
+      const result = await editStudentUser(studentId, req.body);
+      res.json({ success: true, data: result });
+      return;
+    } else {
+      res.status(403).json({
+        success: false,
+        error: "Only teachers can edit student details",
+      });
+      return;
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: "Server error" });
+    return;
+  }
+});
+
 app.post(
   "/class/join",
   async (req: Request<{}, {}, ClassJoinQuery>, res: Response) => {
     try {
       const user = req.app.locals.user;
 
-      // Authorization check
       if (!user || user.role !== "STUDENT") {
         res.status(403).json({
           success: false,
@@ -425,13 +489,32 @@ app.get("/classes", async (req: Request, res: Response) => {
       data: classes || [],
     });
     return;
-  }
-  catch (error) {
+  } catch (error) {
     console.error("Error fetching classes:", error);
     res.status(500).json({
       success: false,
       error: "Failed to retrieve classes",
     });
+    return;
+  }
+});
+
+app.get("class/:id", async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const classData = await getClassById(Number(id));
+
+    if (!classData) {
+      res.status(404).json({ success: false, message: "Class not found" });
+      return;
+    }
+
+    res.json({ success: true, data: classData });
+    return;
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: "Server error" });
     return;
   }
 });
@@ -442,7 +525,6 @@ app.post(
     try {
       const user = req.app.locals.user;
 
-      // Authorization check
       if (!user || user.role !== "TEACHER") {
         res.status(403).json({
           success: false,
@@ -513,7 +595,7 @@ app.post(
   }
 );
 
-// Start server with error handling
+// Start server
 app
   .listen(PORT, () => {
     console.log("Server running at PORT:", PORT);

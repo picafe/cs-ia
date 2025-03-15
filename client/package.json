@@ -5,17 +5,17 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "deno check && vite build",
+    "build": "tsc -b && vite build",
     "lint": "deno lint",
     "preview": "vite preview",
     "format": "/home/surya/.deno/bin/deno fmt",
     "prepare": "cd .. && husky client/.husky"
   },
   "dependencies": {
-    "@mantine/core": "^7.12.2",
-    "@mantine/dates": "^7.16.0",
-    "@mantine/form": "^7.12.2",
-    "@mantine/hooks": "^7.12.2",
+    "@mantine/core": "^7.17.2",
+    "@mantine/dates": "^7.17.2",
+    "@mantine/form": "^7.17.2",
+    "@mantine/hooks": "^7.17.2",
     "@tabler/icons-react": "^3.16.0",
     "axios": "^1.7.7",
     "dayjs": "^1.11.13",

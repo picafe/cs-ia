@@ -85,14 +85,14 @@ export default function Auth() {
 
     validate: {
       email: (
-        val,
+        val: string,
       ) => (/^\S+\.+\S+@(student\.)?tdsb\.on\.ca+$/.test(val)
         ? null
         : "Invalid email"),
       password: (
-        val,
+        val: string,
       ) => (val.length <= 8 && /[0-9]/.test(val) && /[a-z]/.test(val) &&
-          /[A-Z]/.test(val) && /[$&+,:;=?@#|'<>.^*()%!-]/.test(val)
+        /[A-Z]/.test(val) && /[$&+,:;=?@#|'<>.^*()%!-]/.test(val)
         ? "Password does not meet the requirements"
         : null),
     },
@@ -110,19 +110,19 @@ export default function Auth() {
 
     validate: {
       email: (
-        val,
+        val: string,
       ) => (/^\S+\.+\S+@(student\.)?tdsb\.on\.ca+$/.test(val) &&
-          val.length < 256
+        val.length < 256
         ? null
         : "Invalid email entered"),
       password: (
-        val,
+        val: string,
       ) => (val.length >= 8 && /[0-9]/.test(val) && /[a-z]/.test(val) &&
-          /[A-Z]/.test(val) && /[$&+,:;=?@#|'<>.^*()%!-]/.test(val)
+        /[A-Z]/.test(val) && /[$&+,:;=?@#|'<>.^*()%!-]/.test(val)
         ? null
         : "Password does not meet the requirements"),
       confirmPassword: (
-        val,
+        val: string,
       ):
         | string
         | null => (val === signupForm.values.password
@@ -267,9 +267,8 @@ export default function Auth() {
       <div className="w-2/5">
         <div className="h-full w-full flex flex-col justify-center items-center p-16 overflow-y-scroll my-auto">
           <div
-            className={`text-5xl font-bold w-full ${
-              location.pathname === "/login" ? "pt-4" : "pt-20"
-            }`}
+            className={`text-5xl font-bold w-full ${location.pathname === "/login" ? "pt-4" : "pt-20"
+              }`}
           >
             <h1 style={{ fontSize: "3rem" }}>
               Welcome to <br />

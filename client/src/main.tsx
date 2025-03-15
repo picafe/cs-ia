@@ -34,6 +34,7 @@ const router = createBrowserRouter([
             path: "teacher/settings",
             element: <TeacherSettings />,
           },
+          
         ],
       },
 
@@ -70,6 +71,7 @@ const router = createBrowserRouter([
 ]);
 
 const theme = createTheme({
+  white: "#f5f5f5",
   primaryColor: "cyan",
 });
 

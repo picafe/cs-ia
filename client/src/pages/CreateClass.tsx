@@ -14,12 +14,13 @@ import {
 import { DateInput, DateValue } from "@mantine/dates";
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
-import { IconExclamationCircle, IconSchool } from "@tabler/icons-react";
+import { IconCheck, IconExclamationCircle, IconSchool } from "@tabler/icons-react";
 import axios from "axios";
 import { useState } from "react";
 export default function CreateClass() {
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
   const [date, setDate] = useState<Date | null>(null);
   const [opened, { open, close }] = useDisclosure(false);
   const serverUrl = import.meta.env.VITE_SERVER_URL;
@@ -47,6 +48,7 @@ export default function CreateClass() {
       });
       if (res.data.success) {
         setCode(res.data.data.code);
+        setSuccess(true);
       }
     } catch (err) {
       let errorMessage: string;
@@ -62,7 +64,7 @@ export default function CreateClass() {
   };
   return (
     <div>
-      <Modal opened={opened} onClose={close} title="Create Class">
+      <Modal opened={opened} onClose={close} title="Create Class" closeOnClickOutside={false} closeOnEscape={false} trapFocus>
         <FocusTrap.InitialFocus />
         {errorMessage && (
           <Alert
@@ -72,6 +74,16 @@ export default function CreateClass() {
             icon={<IconExclamationCircle />}
           >
             {errorMessage}
+          </Alert>
+        )}
+        {success && (
+          <Alert
+            variant="light"
+            title="Class Created"
+            color="green"
+            icon={<IconCheck />}
+          >
+            Class was created sucessfully!
           </Alert>
         )}
         {/* if loading is true, display a loader, else if error, nothing, else code and copy button */}

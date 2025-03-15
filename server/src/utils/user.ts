@@ -1,4 +1,4 @@
-import { Class, Role, User } from "@prisma/client";
+import { Class, Role, StudentUser, User, UserStatus } from "@prisma/client";
 import { prisma } from "../db";
 import { hashPassword } from "./password";
 
@@ -127,4 +127,29 @@ export interface UserBInfo {
   id: number;
   email: string;
   name: string;
+}
+
+export async function getStudentUserById(id: number): Promise<StudentUser | null> {
+  const user = await prisma.studentUser.findUnique({
+    where: { id },
+    include: {
+      user: {
+        select: {
+          name: true,
+          email: true,
+        },
+      },
+    },
+  });
+  return user;
+}
+
+export async function editStudentUser(
+  id: number,
+  data: Partial<StudentUser>
+): Promise<void> {
+  await prisma.studentUser.update({
+    where: { id },
+    data,
+  });
 }
