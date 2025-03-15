@@ -34,7 +34,6 @@ const router = createBrowserRouter([
             path: "teacher/settings",
             element: <TeacherSettings />,
           },
-          
         ],
       },
 

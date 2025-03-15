@@ -53,4 +53,4 @@ interface ClassDetails {
   dueDates: DueDate[];
 }
 
-export type { Role, User, ClassDetails, UserStatus, DueDate };
+export type { ClassDetails, DueDate, Role, User, UserStatus };

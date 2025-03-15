@@ -14,7 +14,11 @@ import {
 import { DateInput, DateValue } from "@mantine/dates";
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
-import { IconCheck, IconExclamationCircle, IconSchool } from "@tabler/icons-react";
+import {
+  IconCheck,
+  IconExclamationCircle,
+  IconSchool,
+} from "@tabler/icons-react";
 import axios from "axios";
 import { useState } from "react";
 export default function CreateClass() {
@@ -64,7 +68,14 @@ export default function CreateClass() {
   };
   return (
     <div>
-      <Modal opened={opened} onClose={close} title="Create Class" closeOnClickOutside={false} closeOnEscape={false} trapFocus>
+      <Modal
+        opened={opened}
+        onClose={close}
+        title="Create Class"
+        closeOnClickOutside={false}
+        closeOnEscape={false}
+        trapFocus
+      >
         <FocusTrap.InitialFocus />
         {errorMessage && (
           <Alert
