@@ -1,22 +1,26 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
+  IconDownload,
+  IconLanguage,
   IconLogout,
   IconMoon,
   IconPalette,
   IconSettings,
   IconSun,
   IconTrash,
-  IconDownload,
-  IconLanguage
 } from "@tabler/icons-react";
 import {
   ActionIcon,
+  Alert,
   Avatar,
   Button,
   Card,
+  Center,
   Group,
+  MantineColorScheme,
   Modal,
   PasswordInput,
+  SegmentedControl,
   Select,
   Stack,
   Text,
@@ -24,10 +28,6 @@ import {
   Title,
   useComputedColorScheme,
   useMantineColorScheme,
-  Alert,
-  SegmentedControl,
-  Center,
-  MantineColorScheme,
 } from "@mantine/core";
 import Logo from "../icons/Logo";
 import classes from "./UserSettings.module.css";
@@ -60,8 +60,6 @@ export default function UserSettings() {
   const [profileLoading, setProfileLoading] = useState(false);
   const [notificationLoading, setNotificationLoading] = useState(false);
 
-
-
   // Form for general profile settings
   const profileForm = useForm({
     mode: "uncontrolled",
@@ -70,12 +68,15 @@ export default function UserSettings() {
       email: user?.email || "",
     },
     validate: {
-      name: (value) => (value.length > 2 ? null : "Name must be at least 3 characters"),
+      name: (
+        value,
+      ) => (value.length > 2 ? null : "Name must be at least 3 characters"),
       email: (value) =>
-        /^\S+\.+\S+@(student\.)?tdsb\.on\.ca+$/.test(value) ? null : "Invalid email format"
-    }
+        /^\S+\.+\S+@(student\.)?tdsb\.on\.ca+$/.test(value)
+          ? null
+          : "Invalid email format",
+    },
   });
-
 
   useEffect(() => {
     let timer: number | undefined;
@@ -100,13 +101,21 @@ export default function UserSettings() {
       confirmPassword: "",
     },
     validate: {
-      currentPassword: (value) => (value ? null : "Current password is required"),
+      currentPassword: (
+        value,
+      ) => (value ? null : "Current password is required"),
       newPassword: (value) => {
         if (value.length < 8) return "Password must be at least 8 characters";
-        if (!/[A-Z]/.test(value)) return "Password must include uppercase letter";
-        if (!/[a-z]/.test(value)) return "Password must include lowercase letter";
+        if (!/[A-Z]/.test(value)) {
+          return "Password must include uppercase letter";
+        }
+        if (!/[a-z]/.test(value)) {
+          return "Password must include lowercase letter";
+        }
         if (!/[0-9]/.test(value)) return "Password must include a number";
-        if (!/[$&+,:;=?@#|'<>.^*()%!-]/.test(value)) return "Password must include a special character";
+        if (!/[$&+,:;=?@#|'<>.^*()%!-]/.test(value)) {
+          return "Password must include a special character";
+        }
         return null;
       },
       confirmPassword: (value, { newPassword }) =>
@@ -117,17 +126,16 @@ export default function UserSettings() {
   // Form for notification settings
   const notificationForm = useForm({
     initialValues: {
-      browserNotifications: 'false',
-      emailNotifications: 'false',
+      browserNotifications: "false",
+      emailNotifications: "false",
     },
   });
-
 
   const fetchUserProfile = async () => {
     try {
       setProfileLoading(true);
       const res = await axios.get(`${serverUrl}/user/profile`, {
-        withCredentials: true
+        withCredentials: true,
       });
 
       if (res.data.success) {
@@ -149,8 +157,8 @@ export default function UserSettings() {
   const fetchNotificationSettings = async () => {
     try {
       setNotificationLoading(true);
-      const res = await axios.get(`${serverUrl}/user/notifications`, { 
-        withCredentials: true 
+      const res = await axios.get(`${serverUrl}/user/notifications`, {
+        withCredentials: true,
       });
       console.log(res.data.data);
 
@@ -178,14 +186,14 @@ export default function UserSettings() {
   }, []);
 
   // Update profile settings
-  const updateProfile = async (values: { name: string, email: string }) => {
+  const updateProfile = async (values: { name: string; email: string }) => {
     setError("");
     try {
       setLoading(true);
       const res = await axios.put(
         `${serverUrl}/user/profile`,
         values,
-        { withCredentials: true }
+        { withCredentials: true },
       );
       if (res.data.success) {
         setSuccess("Profile updated successfully");
@@ -206,7 +214,9 @@ export default function UserSettings() {
   };
 
   // Update password
-  const updatePassword = async (values: { currentPassword: string, newPassword: string }) => {
+  const updatePassword = async (
+    values: { currentPassword: string; newPassword: string },
+  ) => {
     setPasswordLoading(true);
     setError("");
     try {
@@ -216,7 +226,7 @@ export default function UserSettings() {
           currentPassword: values.currentPassword,
           newPassword: values.newPassword,
         },
-        { withCredentials: true }
+        { withCredentials: true },
       );
       if (res.data.success) {
         setSuccess("Password updated successfully");
@@ -239,10 +249,10 @@ export default function UserSettings() {
     try {
       const res = await axios.delete(
         `${serverUrl}/user/account`,
-        { withCredentials: true }
+        { withCredentials: true },
       );
       if (res.data.success) {
-        navigate('/login');
+        navigate("/login");
       }
     } catch (err) {
       let errorMessage = "Failed to delete account";
@@ -257,17 +267,19 @@ export default function UserSettings() {
   };
 
   // Update notification settings
-  const updateNotifications = async (values: { browserNotifications: string, emailNotifications: string }) => {
+  const updateNotifications = async (
+    values: { browserNotifications: string; emailNotifications: string },
+  ) => {
     const vals = {
-      browserNotifications: values.browserNotifications === 'true',
-      emailNotifications: values.emailNotifications === 'true',
-    }
+      browserNotifications: values.browserNotifications === "true",
+      emailNotifications: values.emailNotifications === "true",
+    };
     try {
       setLoading(true);
       const res = await axios.put(
         `${serverUrl}/user/notifications`,
         vals,
-        { withCredentials: true }
+        { withCredentials: true },
       );
       if (res.data.success) {
         setSuccess("Notification preferences updated successfully");
@@ -365,209 +377,264 @@ export default function UserSettings() {
       </nav>
 
       <div className="flex-1 p-6 overflow-y-auto">
-        {active === "General" ? (
-          <Stack>
-            <Title order={2} mb="md">General Settings</Title>
+        {active === "General"
+          ? (
+            <Stack>
+              <Title order={2} mb="md">General Settings</Title>
 
-            {error && (
-              <Alert color="red" title="Error" withCloseButton onClose={() => setError("")}>
-                {error}
-              </Alert>
-            )}
+              {error && (
+                <Alert
+                  color="red"
+                  title="Error"
+                  withCloseButton
+                  onClose={() => setError("")}
+                >
+                  {error}
+                </Alert>
+              )}
 
-            {success && (
-              <Alert color="green" title="Success" withCloseButton onClose={() => setSuccess("")}>
-                {success}
-              </Alert>
-            )}
+              {success && (
+                <Alert
+                  color="green"
+                  title="Success"
+                  withCloseButton
+                  onClose={() => setSuccess("")}
+                >
+                  {success}
+                </Alert>
+              )}
 
-            <Card withBorder shadow="sm" p="lg" radius="md" mb="md">
-              <Title order={3} mb="md">Profile Information</Title>
-              <form onSubmit={profileForm.onSubmit(updateProfile)}>
-                <Stack>
-                  <TextInput
-                    label="Name"
-                    placeholder="Your name"
-                    {...profileForm.getInputProps('name')}
-                    required
-                  />
-                  <TextInput
-                    label="Email"
-                    placeholder="Your email"
-                    {...profileForm.getInputProps('email')}
-                    required
-                  />
-                  <Group justify="flex-end">
-                    <Button type="submit" loading={loading}>Save Changes</Button>
-                  </Group>
-                </Stack>
-              </form>
-            </Card>
+              <Card withBorder shadow="sm" p="lg" radius="md" mb="md">
+                <Title order={3} mb="md">Profile Information</Title>
+                <form onSubmit={profileForm.onSubmit(updateProfile)}>
+                  <Stack>
+                    <TextInput
+                      label="Name"
+                      placeholder="Your name"
+                      {...profileForm.getInputProps("name")}
+                      required
+                    />
+                    <TextInput
+                      label="Email"
+                      placeholder="Your email"
+                      {...profileForm.getInputProps("email")}
+                      required
+                    />
+                    <Group justify="flex-end">
+                      <Button type="submit" loading={loading}>
+                        Save Changes
+                      </Button>
+                    </Group>
+                  </Stack>
+                </form>
+              </Card>
 
-            <Card withBorder shadow="sm" p="lg" radius="md" mb="md">
-              <Title order={3} mb="md">Password</Title>
-              <form onSubmit={passwordForm.onSubmit(updatePassword)}>
-                <Stack>
-                  <PasswordInput
-                    label="Current Password"
-                    placeholder="Enter your current password"
-                    {...passwordForm.getInputProps('currentPassword')}
-                    required
-                  />
-                  <PasswordInput
-                    label="New Password"
-                    placeholder="Enter your new password"
-                    {...passwordForm.getInputProps('newPassword')}
-                    required
-                  />
-                  <PasswordInput
-                    label="Confirm New Password"
-                    placeholder="Confirm your new password"
-                    {...passwordForm.getInputProps('confirmPassword')}
-                    required
-                  />
-                  <Group justify="flex-end">
-                    <Button type="submit" loading={passwordLoading}>Update Password</Button>
-                  </Group>
-                </Stack>
-              </form>
-            </Card>
+              <Card withBorder shadow="sm" p="lg" radius="md" mb="md">
+                <Title order={3} mb="md">Password</Title>
+                <form onSubmit={passwordForm.onSubmit(updatePassword)}>
+                  <Stack>
+                    <PasswordInput
+                      label="Current Password"
+                      placeholder="Enter your current password"
+                      {...passwordForm.getInputProps("currentPassword")}
+                      required
+                    />
+                    <PasswordInput
+                      label="New Password"
+                      placeholder="Enter your new password"
+                      {...passwordForm.getInputProps("newPassword")}
+                      required
+                    />
+                    <PasswordInput
+                      label="Confirm New Password"
+                      placeholder="Confirm your new password"
+                      {...passwordForm.getInputProps("confirmPassword")}
+                      required
+                    />
+                    <Group justify="flex-end">
+                      <Button type="submit" loading={passwordLoading}>
+                        Update Password
+                      </Button>
+                    </Group>
+                  </Stack>
+                </form>
+              </Card>
 
-            <Card withBorder shadow="sm" p="lg" radius="md" mb="md">
-              <Title order={3} mb="md">Notifications</Title>
-              <Text mb="md">You will only be notified regarding updates to your activities</Text>
-              <form onSubmit={notificationForm.onSubmit(updateNotifications)}>
-                <Stack>
-                  <Select
-                    label="Browser Notifications"
-                    placeholder="Select notification preference"
-                    data={[
-                      { value: 'true', label: 'Enabled' },
-                      { value: 'false', label: 'Disabled' },
-                    ]}
-                    disabled={notificationLoading}
-                    value={notificationForm.values.browserNotifications.toString()}
-                    onChange={(value) => notificationForm.setFieldValue('browserNotifications', value || 'false')}
-                  />
-                  <Select
-                    label="Email Notifications"
-                    placeholder="Select notification preference"
-                    data={[
-                      { value: 'true', label: 'Enabled' },
-                      { value: 'false', label: 'Disabled' },
-                    ]}
-                    disabled={notificationLoading}
-                    value={notificationForm.values.emailNotifications.toString()}
-                    onChange={(value) => notificationForm.setFieldValue('emailNotifications', value || 'false')}
-                  />
-                  <Group justify="flex-end">
-                    <Button type="submit" loading={loading || notificationLoading}>Save Preferences</Button>
-                  </Group>
-                </Stack>
-              </form>
-            </Card>
+              <Card withBorder shadow="sm" p="lg" radius="md" mb="md">
+                <Title order={3} mb="md">Notifications</Title>
+                <Text mb="md">
+                  You will only be notified regarding updates to your activities
+                </Text>
+                <form onSubmit={notificationForm.onSubmit(updateNotifications)}>
+                  <Stack>
+                    <Select
+                      label="Browser Notifications"
+                      placeholder="Select notification preference"
+                      data={[
+                        { value: "true", label: "Enabled" },
+                        { value: "false", label: "Disabled" },
+                      ]}
+                      disabled={notificationLoading}
+                      value={notificationForm.values.browserNotifications
+                        .toString()}
+                      onChange={(value) =>
+                        notificationForm.setFieldValue(
+                          "browserNotifications",
+                          value || "false",
+                        )}
+                    />
+                    <Select
+                      label="Email Notifications"
+                      placeholder="Select notification preference"
+                      data={[
+                        { value: "true", label: "Enabled" },
+                        { value: "false", label: "Disabled" },
+                      ]}
+                      disabled={notificationLoading}
+                      value={notificationForm.values.emailNotifications
+                        .toString()}
+                      onChange={(value) =>
+                        notificationForm.setFieldValue(
+                          "emailNotifications",
+                          value || "false",
+                        )}
+                    />
+                    <Group justify="flex-end">
+                      <Button
+                        type="submit"
+                        loading={loading || notificationLoading}
+                      >
+                        Save Preferences
+                      </Button>
+                    </Group>
+                  </Stack>
+                </form>
+              </Card>
 
-            <Card withBorder shadow="sm" p="lg" radius="md" mb="md">
-              <Title order={3} mb="md">Export Data</Title>
-              <Text mb="md">Download a copy of your data</Text>
-              <Button leftSection={<IconDownload size={16} />} disabled>
-                Export Data (Coming Soon)
-              </Button>
-            </Card>
+              <Card withBorder shadow="sm" p="lg" radius="md" mb="md">
+                <Title order={3} mb="md">Export Data</Title>
+                <Text mb="md">Download a copy of your data</Text>
+                <Button leftSection={<IconDownload size={16} />} disabled>
+                  Export Data (Coming Soon)
+                </Button>
+              </Card>
 
-            <Card withBorder shadow="sm" p="lg" radius="md" mb="md" bg="rgba(255, 0, 0, 0.03)">
-              <Title order={3} mb="md" c="red">Danger Zone</Title>
-              <Text mb="md">Once you delete your account, there is no going back. Please be certain.</Text>
-              <Button
-                leftSection={<IconTrash size={16} />}
-                color="red"
-                variant="outline"
-                onClick={open}
+              <Card
+                withBorder
+                shadow="sm"
+                p="lg"
+                radius="md"
+                mb="md"
+                bg="rgba(255, 0, 0, 0.03)"
               >
-                Delete Account
-              </Button>
-            </Card>
+                <Title order={3} mb="md" c="red">Danger Zone</Title>
+                <Text mb="md">
+                  Once you delete your account, there is no going back. Please
+                  be certain.
+                </Text>
+                <Button
+                  leftSection={<IconTrash size={16} />}
+                  color="red"
+                  variant="outline"
+                  onClick={open}
+                >
+                  Delete Account
+                </Button>
+              </Card>
 
-            <Modal
-              opened={opened}
-              onClose={close}
-              title="Delete Account"
-              centered
-            >
-              <Stack>
-                <Text>Are you sure you want to delete your account? This action is irreversible.</Text>
-                <Group justify="flex-end" mt="md">
-                  <Button variant="default" onClick={close}>Cancel</Button>
-                  <Button color="red" onClick={deleteAccount} loading={loading}>Delete Account</Button>
-                </Group>
-              </Stack>
-            </Modal>
-            <Footer />
+              <Modal
+                opened={opened}
+                onClose={close}
+                title="Delete Account"
+                centered
+              >
+                <Stack>
+                  <Text>
+                    Are you sure you want to delete your account? This action is
+                    irreversible.
+                  </Text>
+                  <Group justify="flex-end" mt="md">
+                    <Button variant="default" onClick={close}>Cancel</Button>
+                    <Button
+                      color="red"
+                      onClick={deleteAccount}
+                      loading={loading}
+                    >
+                      Delete Account
+                    </Button>
+                  </Group>
+                </Stack>
+              </Modal>
+              <Footer />
+            </Stack>
+          )
+          : (
+            <Stack>
+              <Title order={2} mb="md">Appearance Settings</Title>
 
-          </Stack>
-        ) : (
-          <Stack>
-            <Title order={2} mb="md">Appearance Settings</Title>
+              <Card withBorder shadow="sm" p="lg" radius="md" mb="md">
+                <Title order={3} mb="md">Theme</Title>
+                <Stack>
+                  <Text mb="md">Choose your preferred theme mode</Text>
+                  <SegmentedControl
+                    value={colorScheme}
+                    onChange={(value) =>
+                      setColorScheme(value as MantineColorScheme)}
+                    data={[
+                      {
+                        value: "light",
+                        label: (
+                          <Center style={{ gap: 10 }}>
+                            <IconSun size={16} stroke={1.5} />
+                            <span>Light</span>
+                          </Center>
+                        ),
+                      },
+                      {
+                        value: "dark",
+                        label: (
+                          <Center style={{ gap: 10 }}>
+                            <IconMoon size={16} stroke={1.5} />
+                            <span>Dark</span>
+                          </Center>
+                        ),
+                      },
+                      {
+                        value: "auto",
+                        label: (
+                          <Center style={{ gap: 10 }}>
+                            <IconSun size={16} stroke={1.5} />/<IconMoon
+                              size={16}
+                              stroke={1.5}
+                            />
+                            <span>Auto</span>
+                          </Center>
+                        ),
+                      },
+                    ]}
+                  />
+                </Stack>
+              </Card>
 
-            <Card withBorder shadow="sm" p="lg" radius="md" mb="md">
-              <Title order={3} mb="md">Theme</Title>
-              <Stack>
-                <Text mb="md">Choose your preferred theme mode</Text>
-                <SegmentedControl
-                  value={colorScheme}
-                  onChange={(value) => setColorScheme(value as MantineColorScheme)}
-                  data={[
-                    {
-                      value: 'light',
-                      label: (
-                        <Center style={{ gap: 10 }}>
-                          <IconSun size={16} stroke={1.5} />
-                          <span>Light</span>
-                        </Center>
-                      ),
-                    },
-                    {
-                      value: 'dark',
-                      label: (
-                        <Center style={{ gap: 10 }}>
-                          <IconMoon size={16} stroke={1.5} />
-                          <span>Dark</span>
-                        </Center>
-                      ),
-                    },
-                    {
-                      value: 'auto',
-                      label: (
-                        <Center style={{ gap: 10 }}>
-                          <IconSun size={16} stroke={1.5} />/<IconMoon size={16} stroke={1.5} />
-                          <span>Auto</span>
-                        </Center>
-                      ),
-                    },
-                  ]}
-                />
-              </Stack>
-            </Card>
-
-            <Card withBorder shadow="sm" p="lg" radius="md">
-              <Title order={3} mb="md">Language</Title>
-              <Stack>
-                <Text mb="md">Select your preferred language</Text>
-                <Select
-                  data={[
-                    { value: 'en', label: 'English' },
-                    { value: 'fr', label: 'Français' },
-                  ]}
-                  defaultValue="en"
-                  leftSection={<IconLanguage size={16} />}
-                  disabled
-                  label="Language (Coming Soon)"
-                />
-              </Stack>
-            </Card>
-            <Footer />
-          </Stack>
-        )}
+              <Card withBorder shadow="sm" p="lg" radius="md">
+                <Title order={3} mb="md">Language</Title>
+                <Stack>
+                  <Text mb="md">Select your preferred language</Text>
+                  <Select
+                    data={[
+                      { value: "en", label: "English" },
+                      { value: "fr", label: "Français" },
+                    ]}
+                    defaultValue="en"
+                    leftSection={<IconLanguage size={16} />}
+                    disabled
+                    label="Language (Coming Soon)"
+                  />
+                </Stack>
+              </Card>
+              <Footer />
+            </Stack>
+          )}
       </div>
     </div>
   );
