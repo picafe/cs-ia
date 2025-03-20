@@ -22,18 +22,14 @@ model User {
   password_hash  String
   sessions       Session[]
   passwordResets PasswordReset[]
+  browserNotifications Boolean @default(false)
+  emailNotifications Boolean @default(false)
 
   role       Role  @default(STUDENT)
 
   teacher TeacherUser?
   student StudentUser?
 
-  // totalHours Float @default(0)
-
-  // class Class? @relation(fields: [classId], references: [id])
-  // classId Int? 
-
-  // activities Activity[]
 }
 
 model StudentUser {

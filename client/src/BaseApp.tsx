@@ -1,7 +1,6 @@
 import { Outlet, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axios from "axios";
-import Footer from "./components/Footer";
 import "@mantine/dates/styles.css";
 import { Loader } from "@mantine/core";
 import { User } from "./types";
@@ -49,7 +48,6 @@ function BaseApp() {
       >
         <Outlet context={user} />
       </div>
-      <Footer />
     </>
   );
 }

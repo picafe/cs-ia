@@ -6,11 +6,18 @@ import cors from "cors";
 import { verifyPasswordHash, verifyPasswordStrength } from "./utils/password";
 import {
   createUser,
+  deleteUser,
   editStudentUser,
+  getNotificationPreferences,
   getStudentUserById,
   getUserClasses,
   getUserFromEmail,
   getUserPasswordHash,
+  getUserProfile,
+  updateUserEmail,
+  updateUserName,
+  updateUserNotificationPreferences,
+  updateUserPassword,
   verifyNameInput,
 } from "./utils/user";
 import {
@@ -26,6 +33,7 @@ import {
   getClassById,
   joinClass,
 } from "./utils/class";
+import { error } from "console";
 
 dotenv.config();
 const app = express();
@@ -420,6 +428,258 @@ app.post("/user/student/:id", async (req: Request, res: Response) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, message: "Server error" });
+    return;
+  }
+});
+
+// Add this endpoint after other user-related endpoints
+
+// Get user profile information
+app.get("/user/profile", async (req: Request, res: Response) => {
+  try {
+    const user = req.app.locals.user;
+    
+    const userInfo = await getUserProfile(user.id);    
+    
+    if (!userInfo) {
+      res.status(404).json({
+        success: false,
+        error: "User not found",
+      });
+      return;
+    }
+    
+    res.status(200).json({
+      success: true,
+      data: userInfo,
+    });
+    return;
+  } catch (error) {
+    console.error("Profile fetch error:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to fetch user profile",
+    });
+    return;
+  }
+});
+
+app.put("/user/profile", async (req: Request, res: Response) => {
+  try {
+    const { name, email } = req.body;
+    const userId = req.app.locals.user.id;
+
+    // Input validation
+    if (!name || !email) {
+      res.status(400).json({
+        success: false,
+        error: "Name and email are required",
+      });
+      return;
+    }
+
+    if (!verifyNameInput(name)) {
+      res.status(400).json({
+        success: false,
+        error: "Invalid name format",
+      });
+      return;
+    }
+
+    if (!verifyEmailInput(email)) {
+      res.status(400).json({
+        success: false,
+        error: "Invalid email format or domain",
+      });
+      return;
+    }
+
+    // Check if email is already in use by another user
+    if (email !== req.app.locals.user.email) {
+      const emailAvailable = await checkEmailAvailability(email);
+      if (!emailAvailable) {
+        res.status(400).json({
+          success: false,
+          error: "Email is already in use",
+        });
+        return;
+      }
+    }
+
+    // Update user profile
+    await updateUserName(userId, name);
+    
+    if (email !== req.app.locals.user.email) {
+      await updateUserEmail(userId, email);
+    }
+
+    res.status(200).json({
+      success: true,
+      data: { message: "Profile updated successfully" },
+    });
+    return;
+  } catch (error) {
+    console.error("Profile update error:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to update profile",
+    });
+    return;
+  }
+});
+
+// Update user password
+app.put("/user/password", async (req: Request, res: Response) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.app.locals.user.id;
+
+    // Input validation
+    if (!currentPassword || !newPassword) {
+      res.status(400).json({
+        success: false,
+        error: "Current password and new password are required",
+      });
+      return;
+    }
+
+    if (!verifyPasswordStrength(newPassword)) {
+      res.status(400).json({
+        success: false,
+        error:
+          "Password must be at least 8 characters and include uppercase, lowercase, numbers, and special characters",
+      });
+      return;
+    }
+
+    // Verify current password
+    const passwordHash = await getUserPasswordHash(userId);
+    const validPassword = await verifyPasswordHash(passwordHash, currentPassword);
+
+    if (!validPassword) {
+      res.status(401).json({
+        success: false,
+        error: "Current password is incorrect",
+      });
+      return;
+    }
+
+    // Update password
+    await updateUserPassword(userId, newPassword);
+
+    res.status(200).json({
+      success: true,
+      data: { message: "Password updated successfully" },
+    });
+    return;
+  } catch (error) {
+    console.error("Password update error:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to update password",
+    });
+    return;
+  }
+});
+
+
+// Get user notification settings
+app.get("/user/notifications", async (req: Request, res: Response) => {
+  try {
+    const user = req.app.locals.user;
+    
+    const userSettings = await getNotificationPreferences(user.id)
+    
+    // If settings don't exist yet, return default values
+    if (!userSettings) {
+      res.status(404).json({
+        success: false,
+        error: "Notification settings not found",
+      });
+      return;
+    }
+    
+    res.status(200).json({
+      success: true,
+      data: userSettings,
+    });
+    return;
+  } catch (error) {
+    console.error("Notification settings fetch error:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to fetch notification settings",
+    });
+    return;
+  }
+});
+
+// Update notification preferences
+app.put("/user/notifications", async (req: Request, res: Response) => {
+  try {
+    const { emailNotifications, browserNotifications } = req.body;
+    const userId = req.app.locals.user.id;
+
+    // Input validation
+    if (browserNotifications == null || emailNotifications == null) {
+      res.status(400).json({
+        success: false,
+        error: "Notification preferences are required",
+      });
+      return;
+    }
+
+    // Update notification preferences
+    await updateUserNotificationPreferences(userId, browserNotifications, emailNotifications);
+
+    res.status(200).json({
+      success: true,
+      data: { message: "Notification preferences updated successfully" },
+    });
+    return;
+  } catch (error) {
+    console.error("Notification preferences update error:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to update notification preferences",
+    });
+    return;
+  }
+});
+
+// Delete user account
+app.delete("/user/account", async (req: Request, res: Response) => {
+  try {
+    const userId = req.app.locals.user.id;
+
+    // Delete user account
+    await deleteUser(userId);
+    
+    // Clear session
+    const token = req.signedCookies["session"];
+    if (token) {
+      await invalidateSession(token);
+    }
+
+    res.clearCookie("session", {
+      httpOnly: true,
+      path: "/",
+      secure: (process.env.NODE_ENV || "development") !== "development",
+      sameSite: "lax",
+      signed: true,
+    });
+
+    res.status(200).json({
+      success: true,
+      data: { message: "Account deleted successfully" },
+    });
+    return;
+  } catch (error) {
+    console.error("Account deletion error:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to delete account",
+    });
     return;
   }
 });

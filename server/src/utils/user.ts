@@ -63,6 +63,18 @@ export async function updateUserPassword(
   });
 }
 
+export async function getUserProfile(id: number): Promise<{email: string} | null> {
+  const user = await prisma.user.findUnique({
+    where: {
+      id: id,
+    },
+    select: {
+      email: true,
+    }
+  });
+  return user;
+}
+
 export async function updateUserEmailAndSetEmailAsVerified(
   userId: number,
   email: string
@@ -152,4 +164,114 @@ export async function editStudentUser(
     where: { id },
     data,
   });
+}
+
+// Add the following functions to your existing user.ts file
+
+export async function updateUserName(userId: number, name: string): Promise<void> {
+  await prisma.user.update({
+    where: { id: userId },
+    data: { name },
+  });
+}
+
+export async function updateUserEmail(userId: number, email: string): Promise<void> {
+  await prisma.user.update({
+    where: { id: userId },
+    data: { email },
+  });
+}
+
+export async function deleteUser(userId: number): Promise<void> {
+  // First delete all sessions for the user
+  await prisma.session.deleteMany({
+    where: { userId },
+  });
+  
+  // Check user type for specific cleanup
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: {
+      student: true,
+      teacher: true
+    }
+  });
+  
+  // Delete student specific data
+  if (user?.student) {
+    const activities = await prisma.activity.findMany({
+      where: { userId: user.student.id }
+    });
+    
+    for (const activity of activities) {
+      await prisma.log.deleteMany({
+        where: { activityId: activity.id }
+      });
+    }
+    
+    await prisma.activity.deleteMany({
+      where: { userId: user.student.id }
+    });
+    
+    // Delete student user
+    await prisma.studentUser.delete({
+      where: { id: user.student.id }
+    });
+  }
+  
+  // Delete teacher specific data
+  if (user?.teacher) {
+    // For teacher, we should handle classes differently - maybe reassign or mark as inactive
+    // This is a simplified example - in real application, you might want a more sophisticated approach
+    await prisma.teacherUser.delete({
+      where: { id: user.teacher.id }
+    });
+  }
+  
+  // Delete the user
+  await prisma.user.delete({
+    where: { id: userId }
+  });
+}
+
+export async function updateUserNotificationPreferences(
+  userId: number, 
+  browserPreferences: string, 
+  emailPreferences: string
+): Promise<void> {
+  // Since there's no notification preferences in the schema yet, we'll need to add them
+  // For now, this is a placeholder for future implementation
+  console.log(`Setting notification preferences for user ${userId}: browser=${browserPreferences}, email=${emailPreferences}`);
+  
+  // When you update the schema, you would do something like:
+  /*
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      notificationSettings: {
+        upsert: {
+          create: {
+            browserNotifications: browserPreferences,
+            emailNotifications: emailPreferences
+          },
+          update: {
+            browserNotifications: browserPreferences,
+            emailNotifications: emailPreferences
+          }
+        }
+      }
+    }
+  });
+  */
+}
+
+export async function getNotificationPreferences(id: number): Promise<{ browserNotifications: boolean, emailNotifications: boolean } | null> {
+  const preferences = await prisma.user.findUnique({
+    where: { id },
+    select: {
+      browserNotifications: true,
+      emailNotifications: true,
+    },
+  });
+  return preferences;
 }

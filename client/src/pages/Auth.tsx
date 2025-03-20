@@ -210,10 +210,10 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
 
   const signupUser = async (values: signupUser) => {
-    setLoading(true);
     const { name, email, password, accountType } = values;
 
     try {
+      setLoading(true);
       const res = await axios.post(serverUrl + "/user/create", {
         email,
         name,
