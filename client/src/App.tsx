@@ -6,41 +6,26 @@ import Footer from "./components/Footer";
 import "@mantine/dates/styles.css";
 import { Loader } from "@mantine/core";
 import { User } from "./types";
+import { authClient } from "./lib/auth-client" // import the auth client
 
 function App() {
   const navigate = useNavigate();
   const [user, setUser] = useState<User>();
-  const [loading, setLoading] = useState(true);
-  const serverUrl = import.meta.env.VITE_SERVER_URL;
-
-  const fetchSession = async () => {
-    try {
-      const response = await axios.get(serverUrl + "/user/session", {
-        withCredentials: true,
-      });
-      setUser(response.data.data.user);
-    } catch (err) {
-      if (axios.isAxiosError(err) && err.response?.status === 401) {
-        navigate("/login");
-      } else {
-        window.alert("An unexpected error occurred. Please try again later.");
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+  async function fetchUser() { 
+  const session = await authClient.getSession();
+  if (session) {
+    setUser(session?.data?.user);
+  } else 
+    navigate("/login");
+  }
 
   useEffect(() => {
-    fetchSession();
+    fetchUser();
   }, []);
+   
 
-  if (loading) {
-    return (
-      <div className="flex justify-center align-middle min-h-screen px-auto sm:px-8 lg:px-10 sm:mx-auto p-8 antialiased sm:max-w-2xl md:max-w-6xl overflow-hidden md:overflow-visible">
-        <Loader color="gray" type="bars" />
-      </div>
-    );
-  }
+
+  
 
   return (
     <>
@@ -48,9 +33,9 @@ function App() {
         id="shell"
         className="min-h-screen px-auto sm:px-8 lg:px-10 sm:mx-auto p-8 antialiased sm:max-w-2xl md:max-w-6xl overflow-hidden md:overflow-visible"
       >
-        <Navbar user={user} />
+        {/* <Navbar user={user} /> */}
         <main>
-          <Outlet context={user} />
+          {/* <Outlet context={user} /> */}
         </main>
       </div>
       <Footer />

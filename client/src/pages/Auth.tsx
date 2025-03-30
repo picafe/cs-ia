@@ -23,6 +23,7 @@ import {
 import { useLocation, useNavigate } from "react-router-dom";
 import { useForm } from "@mantine/form";
 import axios from "axios";
+import { authClient } from "../lib/auth-client"; //import the auth client
 
 function PasswordRequirementLabel(
   { check, label }: { check: boolean; label: string },
@@ -44,24 +45,17 @@ export default function Auth() {
   const serverUrl = import.meta.env.VITE_SERVER_URL;
 
   // If the user is authenticated, redirect to login page; also checks if the backend is offline
-  const fetchSession = async () => {
-    try {
-      const response = await axios.get(serverUrl + "/user/session", {
-        withCredentials: true,
-      });
-      if (response.data.data.user) {
-        navigate("/");
-      }
-    } catch (err) {
-      if (!(axios.isAxiosError(err) && err.response?.status === 401)) {
-        window.alert("An unexpected error occurred. Please try again later.");
-      }
-    }
-  };
 
-  useEffect(() => {
-    fetchSession();
-  }, []);
+  const {
+    data: session,
+    isPending, //loading state
+    error, //error object 
+    refetch //refetch the session
+  } = authClient.useSession();
+  if (error)
+    window.alert("An unexpected error occurred. Please try again later.");
+  if (session?.user)
+    navigate("/");
 
   useEffect(() => {
     if (location.pathname === "/login") setSelected("login");
@@ -92,7 +86,7 @@ export default function Auth() {
       password: (
         val: string,
       ) => (val.length <= 8 && /[0-9]/.test(val) && /[a-z]/.test(val) &&
-          /[A-Z]/.test(val) && /[$&+,:;=?@#|'<>.^*()%!-]/.test(val)
+        /[A-Z]/.test(val) && /[$&+,:;=?@#|'<>.^*()%!-]/.test(val)
         ? "Password does not meet the requirements"
         : null),
     },
@@ -112,13 +106,13 @@ export default function Auth() {
       email: (
         val: string,
       ) => (/^\S+\.+\S+@(student\.)?tdsb\.on\.ca+$/.test(val) &&
-          val.length < 256
+        val.length < 256
         ? null
         : "Invalid email entered"),
       password: (
         val: string,
       ) => (val.length >= 8 && /[0-9]/.test(val) && /[a-z]/.test(val) &&
-          /[A-Z]/.test(val) && /[$&+,:;=?@#|'<>.^*()%!-]/.test(val)
+        /[A-Z]/.test(val) && /[$&+,:;=?@#|'<>.^*()%!-]/.test(val)
         ? null
         : "Password does not meet the requirements"),
       confirmPassword: (
@@ -199,7 +193,7 @@ export default function Auth() {
   };
 
   interface signupUser {
-    accountType: string;
+    accountType: "TEACHER" | "STUDENT";
     email: string;
     name: string;
     password: string;
@@ -210,56 +204,36 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
 
   const signupUser = async (values: signupUser) => {
-    const { name, email, password, accountType } = values;
-
-    try {
-      setLoading(true);
-      const res = await axios.post(serverUrl + "/user/create", {
-        email,
-        name,
-        password,
-        role: accountType,
-      }, { withCredentials: true });
-      if (res.data) {
-        if (accountType === "TEACHER") {
-          navigate("/class/new");
-        } else {
-          navigate("/class/join");
-        }
-      }
-    } catch (err) {
-      let errorMessage: string;
-      if (axios.isAxiosError(err) && err.response) {
-        errorMessage = err.response.data.error;
-      } else {
-        errorMessage = "Something unexpected happened! Please contact support.";
-      }
-      setErrorMessage("Signup failed: " + errorMessage);
-    } finally {
-      setLoading(false);
-    }
+    const { data, error } = await authClient.signUp.email({
+      email: values.email, // user email address
+      password: values.password, // user password -> min 8 characters by default
+      name: values.name, // user display name
+      callbackURL: "/" // a url to redirect to after the user verifies their email (optional)
+    }, {
+      onRequest: (ctx) => {
+        setLoading(true);
+      },
+      onSuccess: (ctx) => {
+        console.log(ctx)
+      },
+      onError: (ctx) => {
+        // display the error message
+        console.error(ctx.error.message);
+        setErrorMessage(ctx.error.message);
+      },
+    });
+    console.log(data, error);
   };
 
   const loginUser = async (values: { email: string; password: string }) => {
-    setLoading(true);
-    try {
-      const res = await axios.post(serverUrl + "/user/login", values, {
-        withCredentials: true,
-      });
-      if (res.data) {
-        navigate("/");
-      }
-    } catch (err) {
-      let errorMessage: string;
-      if (axios.isAxiosError(err) && err.response) {
-        errorMessage = err.response.data.error;
-      } else {
-        errorMessage = "Something unexpected happened! Please contact support.";
-      }
-      setErrorMessage("Login failed: " + errorMessage);
-    } finally {
-      setLoading(false);
-    }
+    await authClient.signIn.email({
+      email: values.email,
+      password: values.password,
+    }, {
+      onError(ctx) {
+        console.error(ctx.error.message);
+        setErrorMessage(ctx.error.message);      }
+    })
   };
 
   return (
@@ -267,9 +241,8 @@ export default function Auth() {
       <div className="w-2/5">
         <div className="h-full w-full flex flex-col justify-center items-center p-16 overflow-y-scroll my-auto">
           <div
-            className={`text-5xl font-bold w-full ${
-              location.pathname === "/login" ? "pt-4" : "pt-20"
-            }`}
+            className={`text-5xl font-bold w-full ${location.pathname === "/login" ? "pt-4" : "pt-20"
+              }`}
           >
             <h1 style={{ fontSize: "3rem" }}>
               Welcome to <br />
@@ -361,8 +334,9 @@ export default function Auth() {
                     size="md"
                     variant="filled"
                     color="#357c99"
+                    loading={loading}
                   >
-                    {loading ? <Loader size={24} /> : "Sign in"}
+                    Sign in
                   </Button>
                 </Stack>
               </form>
@@ -461,8 +435,9 @@ export default function Auth() {
                     size="md"
                     variant="filled"
                     color="#357c99"
+                    loading={loading}
                   >
-                    {loading ? <Loader size={24} /> : "Sign up"}
+                    Sign up
                   </Button>
                 </Stack>
               </form>

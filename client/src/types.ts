@@ -1,9 +1,11 @@
 type User = {
+  id: string;
   name: string;
-  id: number;
   email: string;
-  password_hash: string;
-  role: Role;
+  emailVerified: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  image?: string | null | undefined | undefined;
 };
 
 enum Role {
