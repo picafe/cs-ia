@@ -6,26 +6,23 @@ import Footer from "./components/Footer";
 import "@mantine/dates/styles.css";
 import { Loader } from "@mantine/core";
 import { User } from "./types";
-import { authClient } from "./lib/auth-client" // import the auth client
+import { authClient } from "./lib/auth-client"; // import the auth client
 
 function App() {
   const navigate = useNavigate();
   const [user, setUser] = useState<User>();
-  async function fetchUser() { 
-  const session = await authClient.getSession();
-  if (session) {
-    setUser(session?.data?.user);
-  } else 
-    navigate("/login");
+  async function fetchUser() {
+    const session = await authClient.getSession();
+    if (session) {
+      setUser(session?.data?.user);
+    } else {
+      navigate("/login");
+    }
   }
 
   useEffect(() => {
     fetchUser();
   }, []);
-   
-
-
-  
 
   return (
     <>
