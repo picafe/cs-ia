@@ -1,18 +1,14 @@
 import {
   ActionIcon,
-  Group,
+  Badge,
   Code,
+  Group,
   Text,
   TextInput,
   Tooltip,
   UnstyledButton,
-  Badge,
 } from "@mantine/core";
-import {
-  IconCheckbox,
-  IconPlus,
-  IconSearch,
-} from "@tabler/icons-react";
+import { IconCheckbox, IconPlus, IconSearch } from "@tabler/icons-react";
 import classes from "./TeacherSettings.module.css";
 import { Link, Route, Routes, useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -29,7 +25,6 @@ function DefaultView() {
     </div>
   );
 }
-
 
 export default function TeacherSettings() {
   const serverUrl = import.meta.env.VITE_SERVER_URL;
@@ -138,13 +133,23 @@ export default function TeacherSettings() {
       <main className="flex-1 p-6">
         <Routes>
           <Route path="/" element={<DefaultView />} />
-          <Route 
-            path="/class/:classId" 
-            element={<ClassDetailsView classesData={classesData} onRefresh={getClasses} />} 
+          <Route
+            path="/class/:classId"
+            element={
+              <ClassDetailsView
+                classesData={classesData}
+                onRefresh={getClasses}
+              />
+            }
           />
-          <Route 
-            path="/student/:studentId" 
-            element={<StudentEditView classesData={classesData} onRefresh={getClasses} />} 
+          <Route
+            path="/student/:studentId"
+            element={
+              <StudentEditView
+                classesData={classesData}
+                onRefresh={getClasses}
+              />
+            }
           />
         </Routes>
       </main>
