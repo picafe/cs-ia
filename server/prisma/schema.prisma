@@ -30,6 +30,9 @@ model User {
   teacher TeacherUser?
   student StudentUser?
 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt @default(now())
+
 }
 
 model StudentUser {
@@ -45,6 +48,9 @@ model StudentUser {
 
   activities Activity[]
 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt @default(now())
+
 }
 
 model TeacherUser {
@@ -53,6 +59,9 @@ model TeacherUser {
   user User @relation(fields: [userId], references: [id])
 
   classes Class[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt @default(now())
 }
 
 enum Role {
@@ -101,6 +110,8 @@ model Class {
 
   dueDates DueDate[]
 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt @default(now())
 }
 
 model DueDate {
@@ -118,14 +129,17 @@ model Activity {
   userId      Int
   user        StudentUser   @relation(fields: [userId], references: [id])
   logs        Log[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt @default(now())
 }
 
 model Log {
   id         Int      @id @default(autoincrement())
   userId     Int
   activityId Int
-  createdAt  DateTime
-  updatedAt  DateTime
+  hours      Float
   typingTime Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt @default(now())
   activity   Activity @relation(fields: [activityId], references: [id])
 }

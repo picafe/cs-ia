@@ -38,13 +38,10 @@ export default function Navbar({ user }: NavbarProps) {
       const res = await axios.post(serverUrl + "/user/logout", {}, {
         withCredentials: true,
       });
-      if (res.status === 204) navigate("/login");
-      else {window.alert(
-          "An unexpected error occurred. Please try again later.",
-        );}
+      if (res.status === 200) navigate("/login");
     } catch (err) {
       if (axios.isAxiosError(err) && err.response) {
-        alert("Logout failed:" + err.response.data);
+        alert("Logout failed:" + err.response.data.message);
       } else {window.alert(
           "An unexpected error occurred. Please try again later.",
         );}

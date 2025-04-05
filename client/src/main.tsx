@@ -14,6 +14,8 @@ import CreateClass from "./pages/CreateClass.tsx";
 import UserSettings from "./pages/UserSettings.tsx";
 import BaseApp from "./BaseApp.tsx";
 import TeacherSettings from "./pages/TeacherSettings.tsx";
+import EditClass from "./pages/EditClass.tsx";
+import StudentDetailView from "./pages/StudentDetailView.tsx";
 
 const router = createBrowserRouter([
   {
@@ -31,8 +33,16 @@ const router = createBrowserRouter([
         element: <Dashboard />,
         children: [
           {
-            path: "teacher/settings",
+            path: "teacher/settings/*",
             element: <TeacherSettings />,
+          },
+          {
+            path: "teacher/student/:studentId",
+            element: <StudentDetailView />,
+          },
+          {
+            path: "class/:id/edit",
+            element: <EditClass />,
           },
         ],
       },

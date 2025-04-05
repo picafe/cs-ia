@@ -31,7 +31,10 @@ import {
   createClass,
   getAllClasses,
   getClassById,
+  getStudentDetailData,
+  getTeacherDashboardData,
   joinClass,
+  updateClass,
 } from "./utils/class";
 import { error } from "console";
 
@@ -854,6 +857,186 @@ app.post(
     }
   }
 );
+
+// Get specific class by ID
+app.get("/class/:id", async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const user = req.app.locals.user;
+
+    if (user.role !== "TEACHER") {
+      res.status(403).json({
+        success: false,
+        error: "Only teachers can view class details",
+      });
+      return;
+    }
+
+    const classData = await getClassById(Number(id));
+
+    if (!classData) {
+      res.status(404).json({ 
+        success: false, 
+        error: "Class not found" 
+      });
+      return;
+    }
+
+    res.json({ 
+      success: true, 
+      data: classData 
+    });
+    return;
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ 
+      success: false, 
+      error: "Server error" 
+    });
+    return;
+  }
+});
+
+// Update class
+app.put("/class/:id", async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const user = req.app.locals.user;
+    
+    if (user.role !== "TEACHER") {
+      res.status(403).json({
+        success: false,
+        error: "Only teachers can update classes",
+      });
+      return;
+    }
+
+    // Input validation
+    const { name, courseCode, description, endDate } = req.body;
+
+    if (!name || typeof name !== "string" || name.trim().length === 0) {
+      res.status(400).json({
+        success: false,
+        error: "Class name is required",
+      });
+      return;
+    }
+
+    if (courseCode && (typeof courseCode !== "string" || courseCode.length > 20)) {
+      res.status(400).json({
+        success: false,
+        error: "Course code must be a valid string under 20 characters",
+      });
+      return;
+    }
+
+    if (description && (typeof description !== "string" || description.length > 500)) {
+      res.status(400).json({
+        success: false,
+        error: "Description must be under 500 characters",
+      });
+      return;
+    }
+
+    if (endDate && isNaN(new Date(endDate).getTime())) {
+      res.status(400).json({
+        success: false,
+        error: "End date must be a valid date",
+      });
+      return;
+    }
+
+    // Update the class
+    const updatedClass = await updateClass(Number(id), {
+      name,
+      courseCode,
+      description,
+      endDate: endDate ? new Date(endDate) : undefined,
+    });
+
+    res.status(200).json({
+      success: true,
+      data: updatedClass,
+    });
+    return;
+  } catch (error) {
+    console.error("Class update error:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to update class",
+    });
+    return;
+  }
+});
+
+app.get("/teacher/dashboard", async (req: Request, res: Response) => {
+  try {
+    const user = req.app.locals.user;
+
+    if (user.role !== "TEACHER") {
+      res.status(403).json({
+        success: false,
+        error: "Only teachers can access this data",
+      });
+      return;
+    }
+
+    const dashboardData = await getTeacherDashboardData(user.id);
+
+    res.status(200).json({
+      success: true,
+      data: dashboardData,
+    });
+    return;
+  } catch (error) {
+    console.error("Error fetching dashboard data:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to retrieve dashboard data",
+    });
+    return;
+  }
+});
+
+// Get student detail view
+app.get("/student/:id/details", async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const user = req.app.locals.user;
+    const studentId = Number(id);
+
+    if (user.role !== "TEACHER") {
+      res.status(403).json({
+        success: false,
+        error: "Only teachers can view student details",
+      });
+      return;
+    }
+
+    const studentData = await getStudentDetailData(studentId);
+    
+    if (!studentData) {
+      res.status(404).json({
+        success: false,
+        error: "Student not found",
+      });
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      data: studentData,
+    });
+    return;
+  } catch (error) {
+    console.error("Error fetching student details:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to retrieve student details",
+    });
+    return;
+  }
+});
 
 // Start server
 app
