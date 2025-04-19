@@ -1,7 +1,21 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import { ActionIcon, Card, colorsTuple, Container, createTheme, MantineColorsTuple, MantineProvider, MantineThemeOverride, Paper, rem, Select, Table, virtualColor } from "@mantine/core";
+import {
+  ActionIcon,
+  Card,
+  colorsTuple,
+  Container,
+  createTheme,
+  MantineColorsTuple,
+  MantineProvider,
+  MantineThemeOverride,
+  Paper,
+  rem,
+  Select,
+  Table,
+  virtualColor,
+} from "@mantine/core";
 import App from "./App.tsx";
 import "./index.css";
 import "@mantine/core/styles.css";
@@ -89,10 +103,8 @@ const dark: MantineColorsTuple = [
   "#1a1a2e", // plum4
   "#0f0f1a", // plum3
   "#201320", // plum2
-  "#181118"  // plum1 (darkest)
+  "#181118", // plum1 (darkest)
 ];
-
-
 
 const CONTAINER_SIZES: Record<string, string> = {
   xxs: rem("200px"),
@@ -105,17 +117,17 @@ const CONTAINER_SIZES: Record<string, string> = {
 };
 
 export const theme: MantineThemeOverride = createTheme({
-  white: '#f5f5ff',
-  black: '#0f0f1a',
-  defaultRadius: 'md',
-  fontFamily: 'Inter, sans-serif',
+  white: "#f5f5ff",
+  black: "#0f0f1a",
+  defaultRadius: "md",
+  fontFamily: "Inter, sans-serif",
   colors: {
-    lightTable: colorsTuple('#f2f2fc'),
-    darkTable: colorsTuple('#19192f'),
+    lightTable: colorsTuple("#f2f2fc"),
+    darkTable: colorsTuple("#19192f"),
     table: virtualColor({
-      name: 'table',
-      dark: 'darkTable',
-      light: 'lightTable',
+      name: "table",
+      dark: "darkTable",
+      light: "lightTable",
     }),
     // dark: dark,
   },
@@ -152,8 +164,8 @@ export const theme: MantineThemeOverride = createTheme({
           "--container-size": fluid
             ? "100%"
             : size !== undefined && size in CONTAINER_SIZES
-              ? CONTAINER_SIZES[size]
-              : rem(size),
+            ? CONTAINER_SIZES[size]
+            : rem(size),
         },
       }),
     }),
@@ -163,15 +175,12 @@ export const theme: MantineThemeOverride = createTheme({
         stripedColor: "table",
         highlightOnHover: true,
         highlightOnHoverColor: "table",
-
       },
-
     }),
     ActionIcon: ActionIcon.extend({
       styles: (theme) => ({
         root: {
           backgroundColor: theme.colors.table[0],
-
         },
       }),
     }),
@@ -191,7 +200,6 @@ export const theme: MantineThemeOverride = createTheme({
         shadow: "xl",
         radius: "var(--mantine-radius-default)",
         withBorder: true,
-
       },
     }),
     Select: Select.extend({
