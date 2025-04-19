@@ -360,7 +360,6 @@ export default function Auth() {
                     fullWidth
                     size="md"
                     variant="filled"
-                    color="#357c99"
                   >
                     {loading ? <Loader size={24} /> : "Sign in"}
                   </Button>
@@ -460,7 +459,6 @@ export default function Auth() {
                     fullWidth
                     size="md"
                     variant="filled"
-                    color="#357c99"
                   >
                     {loading ? <Loader size={24} /> : "Sign up"}
                   </Button>

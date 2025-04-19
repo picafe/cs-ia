@@ -4,7 +4,7 @@
   padding: var(--mantine-spacing-md);
   display: flex;
   flex-direction: column;
-  background-color: var(--mantine-color-cyan-filled);
+  background-color: light-dark(#ffffff, #1a1a2e); 
 }
 
 .navbarMain {
@@ -69,7 +69,6 @@
 }
 
 .linkIcon {
-  color: var(--mantine-color-white);
   margin-right: var(--mantine-spacing-sm);
   width: 25px;
   height: 25px;

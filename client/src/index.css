@@ -1,3 +1,22 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* For dark mode */
+:root[data-mantine-color-scheme="dark"] {
+  --mantine-color-body: #0f0f1a !important;
+}
+
+.mantine-Card-root,
+.mantine-Select-root,
+.mantine-Select-dropdown {
+  background-color: light-dark(#ffffff, #1a1a2e) !important;
+}
+
+.mantine-Input-input {
+  background-color: light-dark(#e4dfff, #303052) !important;
+}
+
+.mantine-Select-option:hover {
+  background-color: light-dark(#d8e6ff, #303052) !important;
+}

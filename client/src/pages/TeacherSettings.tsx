@@ -70,7 +70,7 @@ export default function TeacherSettings() {
       className={`${classes.mainLink} ${
         selectedClassId === classItem.id
           ? "bg-gray-100 dark:bg-zinc-900"
-          : "dark:bg-[#242424] bg-white"
+          : " bg-white"
       }`}
       onClick={() => handleClassSelection(classItem.id)}
     >

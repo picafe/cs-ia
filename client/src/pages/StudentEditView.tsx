@@ -4,7 +4,6 @@ import {
   Button,
   Card,
   Group,
-  Loader,
   NumberInput,
   Select,
   Text,
@@ -208,8 +207,8 @@ export default function StudentEditView(
             />
 
             <Group mt="lg">
-              <Button type="submit" color="blue">
-                {editStudentLoading ? <Loader size={24} /> : "Save Changes"}
+              <Button type="submit" loading={editStudentLoading}>
+                Save Changes
               </Button>
             </Group>
           </Card>

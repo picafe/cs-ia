@@ -318,7 +318,7 @@ export default function TeacherDashboard() {
                   <Title order={4} mb="md">Student Progress Tracking</Title>
                   {studentData.length > 0
                     ? (
-                      <Table striped highlightOnHover>
+                      <Table highlightOnHover>
                         <Table.Thead>
                           <Table.Tr>
                             <Table.Th>Student</Table.Th>

@@ -174,11 +174,11 @@ export default function StudentDetailView() {
 
   return (
     <Container>
-      <Group mb="md">
+      <Group my="md">
         <Button
           component={Link}
           to="/"
-          variant="subtle"
+          variant="light"
           leftSection={<IconArrowLeft />}
         >
           Back Home
