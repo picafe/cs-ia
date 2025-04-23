@@ -3,6 +3,12 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "imports": {
+    "#honoClient": {
+      "node": "hono-client",
+      "default": "../backend/src/index"
+    }
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
@@ -20,6 +26,7 @@
     "axios": "^1.7.7",
     "better-auth": "^1.2.4",
     "dayjs": "^1.11.13",
+    "hono": "^4.7.5",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router-dom": "^6.30.0"

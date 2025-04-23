@@ -1,44 +1,53 @@
 import { Alert, Button, Group, Loader, TextInput } from "@mantine/core";
-import { useField } from "@mantine/form";
-import axios from "axios";
+import { useForm } from "@mantine/form";
 import { useState } from "react";
 import Logo from "../icons/Logo";
 import { IconExclamationCircle } from "@tabler/icons-react";
 import { useNavigate } from "react-router-dom";
+import { client } from "../lib/client";
+import type { InferRequestType, InferResponseType } from 'hono/client';
+
+type JoinClassFormValues = InferRequestType<typeof client.class.join.$post>['json'];
 
 export default function JoinClass() {
-  const serverUrl = import.meta.env.VITE_SERVER_URL;
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const code = useField({
-    initialValue: "",
-    validate: (
-      value,
-    ) => (value.trim().length < 2 ? "Value is too short" : null),
+  const form = useForm<JoinClassFormValues>({
+    initialValues: {
+      code: "",
+    },
+    validate: {
+      code: (value) => (value.trim().length === 6 ? null : "Class code must be 6 characters"),
+    },
   });
-  const joinClass = async () => {
+
+  const joinClass = async (values: JoinClassFormValues) => {
     setLoading(true);
+    setErrorMessage("");
     try {
-      const res = await axios.post(serverUrl + "/class/join", { code: code }, {
-        withCredentials: true,
-      });
-      if (res.data.success) {
+      const res = await client.class.join.$post({ json: values });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || `HTTP error! status: ${res.status}`);
+      }
+
+      const data = await res.json();
+      if (data.success) {
         navigate("/");
-      }
-    } catch (err) {
-      let errorMessage: string;
-      if (axios.isAxiosError(err) && err.response) {
-        errorMessage = err.response.data.error || "Failed to join class";
       } else {
-        errorMessage = "Something unexpected happened! Please contact support.";
+        throw new Error(data.error || "Failed to join class");
       }
-      setErrorMessage("Join failed: " + errorMessage);
+    } catch (err: any) {
+      console.error("Join class error:", err);
+      setErrorMessage(err.message || "Something unexpected happened! Please contact support.");
     } finally {
       setLoading(false);
     }
   };
+
   return (
     <div className="flex flex-row max-h-screen">
       <div className="w-2/5">
@@ -51,39 +60,44 @@ export default function JoinClass() {
               </span>
             </h1>
           </div>
-          <h1>Join a Class</h1>
+          <h1 className="text-3xl font-semibold mt-8 mb-4 text-center">Join a Class</h1>
           {errorMessage && (
             <Alert
               variant="light"
               title="Error"
               color="red"
               icon={<IconExclamationCircle />}
+              mb="md"
+              withCloseButton
+              onClose={() => setErrorMessage("")}
             >
               {errorMessage}
             </Alert>
           )}
-          <TextInput
-            {...code.getInputProps()}
-            required
-            variant="filled"
-            label="Course Code"
-            size="lg"
-            placeholder="abc123"
-          />
-          <Group justify="flex-end" mt="md">
-            <Button size="md" onClick={() => joinClass()}>
-              {loading ? <Loader /> : "Join 🚀"}
-            </Button>
-          </Group>
+          <form onSubmit={form.onSubmit(joinClass)}>
+            <Stack>
+              <TextInput
+                {...form.getInputProps("code")}
+                required
+                variant="filled"
+                label="Class Code"
+                size="lg"
+                placeholder="Enter 6-character code"
+                maxLength={6}
+              />
+              <Button type="submit" size="lg" loading={loading} fullWidth>
+                {loading ? "Joining..." : "Join Class"}
+              </Button>
+            </Stack>
+          </form>
         </div>
       </div>
-
       <div className="w-3/5 overflow-hidden">
         <img
           src="/pawel-czerwinski-rRJmwU2R1Kk-unsplash.jpg"
           loading="eager"
           alt="abstract green 3D render"
-          className="object-cover w-full"
+          className="object-cover w-full h-full"
         />
       </div>
     </div>

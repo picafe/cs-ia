@@ -1,36 +1,19 @@
-import { Outlet, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
-import axios from "axios";
-import "@mantine/dates/styles.css";
 import { Loader } from "@mantine/core";
-import { User } from "./types";
-
+import { useEffect } from "react";
+import { Outlet, useNavigate } from "react-router-dom";
+import { authClient } from "./lib/client"; // Import authClient
+import type { InferResponseType } from 'hono/client'
+import type { User } from "better-auth/types";
 function BaseApp() {
   const navigate = useNavigate();
-  const [user, setUser] = useState<User>();
-  const [loading, setLoading] = useState(true);
-  const serverUrl = import.meta.env.VITE_SERVER_URL;
+  let user: User | null = null;
 
-  const fetchSession = async () => {
-    try {
-      const response = await axios.get(serverUrl + "/user/session", {
-        withCredentials: true,
-      });
-      setUser(response.data.data.user);
-    } catch (err) {
-      if (axios.isAxiosError(err) && err.response?.status === 401) {
-        navigate("/login");
-      } else {
-        window.alert("An unexpected error occurred. Please try again later.");
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchSession();
-  }, []);
+  // Use the session hook
+  const {
+    data: session,
+    isPending: loading,
+    error,
+  } = authClient.useSession();
 
   if (loading) {
     return (
@@ -40,13 +23,22 @@ function BaseApp() {
     );
   }
 
+  if (error) {
+    console.error("Session fetch error:", error);
+    window.alert("Session expired or invalid. Please log in again.");
+  } else if (!loading && !session?.user) {
+    navigate("/login");
+  } else if (session) {
+    user = session.user
+  }
+
   return (
     <>
       <div
         id="shell"
         className="min-h-screen overflow-hidden md:overflow-visible"
       >
-        <Outlet context={user} />
+        {user ? <Outlet context={user} /> : null /* Or handle no user case */}
       </div>
     </>
   );

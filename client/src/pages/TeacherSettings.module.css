@@ -49,7 +49,16 @@
       var(--mantine-color-gray-0),
       var(--mantine-color-dark-6)
     );
-    color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-dark-0));
+    color: light-dark(var(--mantine-color-black), var(--mantine-color-dark-0));
+  }
+}
+
+/* Add style for the active link */
+.mainLinkActive {
+  &,
+  &:hover {
+    background-color: var(--mantine-color-blue-light); /* Or your theme's primary light color */
+    color: var(--mantine-color-blue-light-color); /* Or your theme's primary light text color */
   }
 }
 

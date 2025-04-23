@@ -1,12 +1,7 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+// prisma/schema.prisma
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../node_modules/.prisma/client"
 }
 
 datasource db {
@@ -14,48 +9,52 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model DueDate {
-  id            Int      @id @default(autoincrement())
-  classId       Int
-  dueDate       DateTime // Deadline for completing hours
-  requiredHours Float // Number of hours required by this deadline
-}
+// --- Better Auth Models ---
 
 model User {
-  id            String    @id
+  id            String    @id // Changed to String for better-auth
   name          String
-  email         String
-  emailVerified Boolean
+  email         String    @unique
+  emailVerified Boolean   @default(false) // Added default
   image         String?
-  createdAt     DateTime
-  updatedAt     DateTime
-  sessions      Session[]
-  accounts      Account[]
+  createdAt     DateTime  @default(now()) // Added default
+  updatedAt     DateTime  @updatedAt // Added update timestamp
 
-  @@unique([email])
+  // better-auth relations
+  sessions Session[]
+  accounts Account[]
+
+  // --- Application-Specific Fields ---
+  role                 Role        @default(STUDENT)
+  browserNotifications Boolean     @default(false)
+  emailNotifications   Boolean     @default(false)
+
+  // --- Application-Specific Relations ---
+  teacher TeacherUser?
+  student StudentUser?
+
   @@map("user")
 }
 
 model Session {
   id        String   @id
   expiresAt DateTime
-  token     String
-  createdAt DateTime
-  updatedAt DateTime
+  token     String   @unique // Added unique constraint
+  createdAt DateTime @default(now()) // Added default
+  updatedAt DateTime @updatedAt // Added update timestamp
   ipAddress String?
   userAgent String?
-  userId    String
+  userId    String // Changed to String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([token])
   @@map("session")
 }
 
 model Account {
   id                    String    @id
-  accountId             String
-  providerId            String
-  userId                String
+  accountId             String // Provider's unique ID for the user
+  providerId            String // e.g., "google", "github", "email"
+  userId                String // Changed to String
   user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   accessToken           String?
   refreshToken          String?
@@ -63,20 +62,120 @@ model Account {
   accessTokenExpiresAt  DateTime?
   refreshTokenExpiresAt DateTime?
   scope                 String?
-  password              String?
-  createdAt             DateTime
-  updatedAt             DateTime
+  password              String? // Hashed password for email provider
+  createdAt             DateTime  @default(now()) // Added default
+  updatedAt             DateTime  @updatedAt // Added update timestamp
 
+  @@unique([providerId, accountId]) // Ensure unique provider/account combo
   @@map("account")
 }
 
 model Verification {
   id         String    @id
-  identifier String
-  value      String
+  identifier String // e.g., email address for verification
+  value      String // The verification code/token
   expiresAt  DateTime
-  createdAt  DateTime?
-  updatedAt  DateTime?
+  createdAt  DateTime  @default(now()) // Added default
+  updatedAt  DateTime  @updatedAt // Added update timestamp
 
+  @@unique([identifier, value]) // Ensure unique identifier/value combo
   @@map("verification")
+}
+
+// --- Application-Specific Models (Adapted) ---
+
+model StudentUser {
+  id         Int        @id @default(autoincrement())
+  userId     String     @unique // Changed to String, links to User.id
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status     UserStatus @default(NOT_STARTED)
+  totalHours Float      @default(0)
+  classId    Int?
+  class      Class?     @relation(fields: [classId], references: [id], onDelete: SetNull) // Set class to null if deleted
+  activities Activity[]
+  createdAt  DateTime   @default(now()) // Added
+  updatedAt  DateTime   @updatedAt // Added
+
+  @@map("student_user")
+}
+
+model TeacherUser {
+  id        Int      @id @default(autoincrement())
+  userId    String   @unique // Changed to String, links to User.id
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  classes   Class[]
+  createdAt DateTime @default(now()) // Added
+  updatedAt DateTime @updatedAt // Added
+
+  @@map("teacher_user")
+}
+
+model Class {
+  id            Int           @id @default(autoincrement())
+  name          String
+  courseCode    String? // Made optional as in old schema logic
+  description   String? // Made optional as in old schema logic
+  code          String        @unique
+  teacherUserId String // Changed to String, links to TeacherUser.userId -> User.id
+  teacher       TeacherUser   @relation(fields: [teacherUserId], references: [userId]) // Relation uses TeacherUser's unique userId field
+  endDate       DateTime?
+  students      StudentUser[]
+  dueDates      DueDate[]
+  createdAt     DateTime      @default(now()) // Added
+  updatedAt     DateTime      @updatedAt // Added
+
+  @@map("class")
+}
+
+model DueDate {
+  id            Int      @id @default(autoincrement())
+  classId       Int
+  dueDate       DateTime // Deadline for completing hours
+  requiredHours Float // Number of hours required by this deadline
+  class         Class    @relation(fields: [classId], references: [id], onDelete: Cascade) // Cascade delete due dates if class is deleted
+  createdAt     DateTime @default(now()) // Added
+  updatedAt     DateTime @updatedAt // Added
+
+  @@map("due_date")
+}
+
+model Activity {
+  id            Int           @id @default(autoincrement())
+  name          String
+  description   String? // Made optional
+  studentUserId Int // Relates to StudentUser.id
+  student       StudentUser   @relation(fields: [studentUserId], references: [id], onDelete: Cascade) // Cascade delete activities if student profile is deleted
+  logs          Log[]
+  createdAt     DateTime      @default(now()) // Added
+  updatedAt     DateTime      @updatedAt // Added
+
+  @@map("activity")
+}
+
+model Log {
+  id         Int      @id @default(autoincrement())
+  activityId Int
+  hours      Float // Number of hours logged
+  description String // description of the log
+  createdAt  DateTime @default(now()) // Added default
+  updatedAt  DateTime @updatedAt // Added update timestamp
+  typingTime Int // Assuming this is seconds or similar integer measure
+  activity   Activity @relation(fields: [activityId], references: [id], onDelete: Cascade) // Cascade delete logs if activity is deleted
+
+  @@map("log")
+}
+
+// --- Enums ---
+
+enum Role {
+  TEACHER
+  STUDENT
+}
+
+enum UserStatus {
+  NOT_STARTED
+  ON_TRACK
+  CONCERN
+  ALERT
+  COMPLETED
 }

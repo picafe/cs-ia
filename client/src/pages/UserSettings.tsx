@@ -1,13 +1,18 @@
 import { useEffect, useState } from "react";
 import {
+  IconCheck,
+  IconExclamationCircle,
+  IconLock,
+  IconUserCircle,
+  IconBell,
   IconDownload,
   IconLanguage,
-  IconLogout,
   IconMoon,
+  IconSun,
   IconPalette,
   IconSettings,
-  IconSun,
   IconTrash,
+  IconLogout,
 } from "@tabler/icons-react";
 import {
   ActionIcon,
@@ -32,21 +37,23 @@ import {
 import Logo from "../icons/Logo";
 import classes from "./UserSettings.module.css";
 import { Link, useNavigate, useOutletContext } from "react-router-dom";
-import axios from "axios";
 import { User } from "../types";
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import Footer from "../components/Footer";
+import { client, authClient } from "../lib/client";
 
 const data = [
   { label: "General", icon: IconSettings },
+  { label: "Security", icon: IconLock },
+  { label: "Notifications", icon: IconBell },
   { label: "Appearance", icon: IconPalette },
+  { label: "Delete Account", icon: IconTrash },
 ];
 
 export default function UserSettings() {
   const user: User = useOutletContext();
   const [active, setActive] = useState("General");
-  const serverUrl = import.meta.env.VITE_SERVER_URL;
   const navigate = useNavigate();
   const { setColorScheme, colorScheme } = useMantineColorScheme();
   const computedColorScheme = useComputedColorScheme("light", {
@@ -55,12 +62,10 @@ export default function UserSettings() {
   const [opened, { open, close }] = useDisclosure(false);
   const [loading, setLoading] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
+  const [notificationLoading, setNotificationLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [profileLoading, setProfileLoading] = useState(false);
-  const [notificationLoading, setNotificationLoading] = useState(false);
 
-  // Form for general profile settings
   const profileForm = useForm({
     mode: "uncontrolled",
     initialValues: {
@@ -87,14 +92,13 @@ export default function UserSettings() {
       }, 5000);
     }
 
-    // Cleanup function
     return () => {
       if (timer) window.clearTimeout(timer);
     };
   }, [success]);
 
-  // Form for password change
   const passwordForm = useForm({
+    mode: "uncontrolled",
     initialValues: {
       currentPassword: "",
       newPassword: "",
@@ -123,7 +127,6 @@ export default function UserSettings() {
     },
   });
 
-  // Form for notification settings
   const notificationForm = useForm({
     initialValues: {
       browserNotifications: "false",
@@ -131,185 +134,169 @@ export default function UserSettings() {
     },
   });
 
-  const fetchUserProfile = async () => {
-    try {
-      setProfileLoading(true);
-      const res = await axios.get(`${serverUrl}/user/profile`, {
-        withCredentials: true,
-      });
-
-      if (res.data.success) {
-        profileForm.setValues({
-          email: res.data.data.email,
-        });
-      }
-    } catch (err) {
-      let errorMessage = "Failed to fetch user profile";
-      if (axios.isAxiosError(err) && err.response) {
-        errorMessage = err.response.data.error || errorMessage;
-      }
-      console.error(errorMessage);
-    } finally {
-      setProfileLoading(false);
-    }
-  };
-
   const fetchNotificationSettings = async () => {
+    setNotificationLoading(true);
+    setError("");
     try {
-      setNotificationLoading(true);
-      const res = await axios.get(`${serverUrl}/user/notifications`, {
-        withCredentials: true,
-      });
-      console.log(res.data.data);
+      const res = await client.user.notifications.$get();
 
-      if (res.data.data.success) {
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || `HTTP error! status: ${res.status}`);
+      }
+      const data = await res.json();
+      if (data.success) {
         notificationForm.setValues({
-          browserNotifications: res.data.data.browserNotifications.toString(),
-          emailNotifications: res.data.data.emailNotifications.toString(),
+          browserNotifications: data.data.browserNotifications.toString(),
+          emailNotifications: data.data.emailNotifications.toString(),
         });
+      } else {
+        throw new Error(data.error || "Failed to fetch notification settings");
       }
-    } catch (err) {
-      let errorMessage = "Failed to fetch notification settings";
-      if (axios.isAxiosError(err) && err.response) {
-        errorMessage = err.response.data.error || errorMessage;
-      }
-      console.error(errorMessage);
+    } catch (err: any) {
+      console.error("Notification settings fetch error:", err);
     } finally {
       setNotificationLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchUserProfile();
-
     fetchNotificationSettings();
   }, []);
 
-  // Update profile settings
   const updateProfile = async (values: { name: string; email: string }) => {
+    setLoading(true);
     setError("");
+    setSuccess("");
     try {
-      setLoading(true);
-      const res = await axios.put(
-        `${serverUrl}/user/profile`,
-        values,
-        { withCredentials: true },
-      );
-      if (res.data.success) {
+      const res = await client.user.profile.$put({ json: values });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || `HTTP error! status: ${res.status}`);
+      }
+
+      const data = await res.json();
+      if (data.success) {
         setSuccess("Profile updated successfully");
-        profileForm.setValues({
-          name: values.name,
-          email: values.email,
-        });
+      } else {
+        throw new Error(data.error || "Failed to update profile");
       }
-    } catch (err) {
-      let errorMessage = "Failed to update profile";
-      if (axios.isAxiosError(err) && err.response) {
-        errorMessage = err.response.data.error || errorMessage;
-      }
-      setError(errorMessage);
+    } catch (err: any) {
+      console.error("Profile update error:", err);
+      setError(err.message || "Failed to update profile");
     } finally {
       setLoading(false);
     }
   };
 
-  // Update password
   const updatePassword = async (
     values: { currentPassword: string; newPassword: string },
   ) => {
     setPasswordLoading(true);
     setError("");
+    setSuccess("");
     try {
-      const res = await axios.put(
-        `${serverUrl}/user/password`,
-        {
-          currentPassword: values.currentPassword,
-          newPassword: values.newPassword,
-        },
-        { withCredentials: true },
-      );
-      if (res.data.success) {
+      const res = await client.user.password.$put({ json: values });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || `HTTP error! status: ${res.status}`);
+      }
+
+      const data = await res.json();
+      if (data.success) {
         setSuccess("Password updated successfully");
         passwordForm.reset();
+      } else {
+        throw new Error(data.error || "Failed to update password");
       }
-    } catch (err) {
-      let errorMessage = "Failed to update password";
-      if (axios.isAxiosError(err) && err.response) {
-        errorMessage = err.response.data.error || errorMessage;
-      }
-      setError(errorMessage);
+    } catch (err: any) {
+      console.error("Password update error:", err);
+      setError(err.message || "Failed to update password");
     } finally {
       setPasswordLoading(false);
     }
   };
 
-  // Delete account
   const deleteAccount = async () => {
     setLoading(true);
+    setError("");
     try {
-      const res = await axios.delete(
-        `${serverUrl}/user/account`,
-        { withCredentials: true },
-      );
-      if (res.data.success) {
-        navigate("/login");
+      const res = await client.user.account.$delete();
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || `HTTP error! status: ${res.status}`);
       }
-    } catch (err) {
-      let errorMessage = "Failed to delete account";
-      if (axios.isAxiosError(err) && err.response) {
-        errorMessage = err.response.data.error || errorMessage;
+
+      const data = await res.json();
+      if (data.success) {
+        await authClient.signOut({
+          fetchOptions: {
+            onSuccess: () => {
+              navigate("/login");
+            },
+          },
+        });
+      } else {
+        throw new Error(data.error || "Failed to delete account");
       }
-      setError(errorMessage);
+    } catch (err: any) {
+      console.error("Account deletion error:", err);
+      setError(err.message || "Failed to delete account");
     } finally {
       setLoading(false);
-      close();
     }
   };
 
-  // Update notification settings
   const updateNotifications = async (
     values: { browserNotifications: string; emailNotifications: string },
   ) => {
-    const vals = {
+    const payload = {
       browserNotifications: values.browserNotifications === "true",
       emailNotifications: values.emailNotifications === "true",
     };
+    setNotificationLoading(true);
+    setError("");
+    setSuccess("");
     try {
-      setLoading(true);
-      const res = await axios.put(
-        `${serverUrl}/user/notifications`,
-        vals,
-        { withCredentials: true },
-      );
-      if (res.data.success) {
+      const res = await client.user.notifications.$put({ json: payload });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || `HTTP error! status: ${res.status}`);
+      }
+
+      const data = await res.json();
+      if (data.success) {
         setSuccess("Notification preferences updated successfully");
+      } else {
+        throw new Error(data.error || "Failed to update notification preferences");
       }
-    } catch (err) {
-      let errorMessage = "Failed to update notification preferences";
-      if (axios.isAxiosError(err) && err.response) {
-        errorMessage = err.response.data.error || errorMessage;
-      }
-      setError(errorMessage);
+    } catch (err: any) {
+      console.error("Notification update error:", err);
+      setError(err.message || "Failed to update notification preferences");
     } finally {
-      setLoading(false);
+      setNotificationLoading(false);
     }
   };
 
   const logout = async () => {
+    setLoading(true);
+    setError("");
     try {
-      const res = await axios.post(serverUrl + "/user/logout", {}, {
-        withCredentials: true,
+      await authClient.signOut({
+        fetchOptions: {
+          onSuccess: () => {
+            navigate("/login");
+          },
+        },
       });
-      if (res.status === 200) navigate("/login");
-      else {
-        window.alert("An unexpected error occurred. Please try again later.");
-      }
-    } catch (err) {
-      if (axios.isAxiosError(err) && err.response) {
-        alert("Logout failed:" + err.response.data);
-      } else {
-        window.alert("An unexpected error occurred. Please try again later.");
-      }
+    } catch (err: any) {
+      console.error("Logout error:", err);
+      setError("Logout failed. Please try again later.");
+      setLoading(false);
     }
   };
 
@@ -318,9 +305,13 @@ export default function UserSettings() {
       className={classes.link}
       data-active={item.label === active || undefined}
       key={item.label}
-      onClick={() => {
+      onClick={(event) => {
+        event.preventDefault();
         setActive(item.label);
+        setError("");
+        setSuccess("");
       }}
+      href="#"
     >
       <item.icon className={classes.linkIcon} stroke={1.5} />
       <span>{item.label}</span>
@@ -360,281 +351,294 @@ export default function UserSettings() {
 
         <div className={classes.footer}>
           <Group gap={6} className={classes.display}>
-            <Avatar color="initials" radius="xl" size={28}>
-              {user?.name.split(" ").map((word) =>
+            <Avatar color="cyan" radius="xl" size={28}>
+              {user?.name?.split(" ").map((word) =>
                 word.charAt(0).toUpperCase()
-              )}
+              ).join('')}
             </Avatar>
             <Text fw={500} visibleFrom="sm" size="sm" lh={1} mr={2}>
               {user?.name}
             </Text>
           </Group>
-          <a href="#" className={classes.link} onClick={logout}>
+          <a href="#" className={classes.link} onClick={(e) => { e.preventDefault(); logout(); }}>
             <IconLogout className={classes.linkIcon} stroke={1.5} />
             <span>Logout</span>
           </a>
         </div>
       </nav>
 
-      <div className="flex-1 p-6 overflow-y-auto">
-        {active === "General"
-          ? (
-            <Stack>
-              <Title order={2} mb="md">General Settings</Title>
+      <div className="flex-1 p-6 overflow-y-auto relative">
+        {error && (
+          <Alert
+            color="red"
+            title="Error"
+            icon={<IconExclamationCircle />}
+            withCloseButton
+            onClose={() => setError("")}
+            mb="md"
+          >
+            {error}
+          </Alert>
+        )}
 
-              {error && (
-                <Alert
-                  color="red"
-                  title="Error"
-                  withCloseButton
-                  onClose={() => setError("")}
-                >
-                  {error}
-                </Alert>
-              )}
+        {success && (
+          <Alert
+            color="green"
+            title="Success"
+            icon={<IconCheck />}
+            withCloseButton
+            onClose={() => setSuccess("")}
+            mb="md"
+          >
+            {success}
+          </Alert>
+        )}
 
-              {success && (
-                <Alert
-                  color="green"
-                  title="Success"
-                  withCloseButton
-                  onClose={() => setSuccess("")}
-                >
-                  {success}
-                </Alert>
-              )}
-
-              <Card withBorder shadow="sm" p="lg" radius="md" mb="md">
-                <Title order={3} mb="md">Profile Information</Title>
-                <form onSubmit={profileForm.onSubmit(updateProfile)}>
-                  <Stack>
-                    <TextInput
-                      label="Name"
-                      placeholder="Your name"
-                      {...profileForm.getInputProps("name")}
-                      required
-                    />
-                    <TextInput
-                      label="Email"
-                      placeholder="Your email"
-                      {...profileForm.getInputProps("email")}
-                      required
-                    />
-                    <Group justify="flex-end">
-                      <Button type="submit" loading={loading}>
-                        Save Changes
-                      </Button>
-                    </Group>
-                  </Stack>
-                </form>
-              </Card>
-
-              <Card withBorder shadow="sm" p="lg" radius="md" mb="md">
-                <Title order={3} mb="md">Password</Title>
-                <form onSubmit={passwordForm.onSubmit(updatePassword)}>
-                  <Stack>
-                    <PasswordInput
-                      label="Current Password"
-                      placeholder="Enter your current password"
-                      {...passwordForm.getInputProps("currentPassword")}
-                      required
-                    />
-                    <PasswordInput
-                      label="New Password"
-                      placeholder="Enter your new password"
-                      {...passwordForm.getInputProps("newPassword")}
-                      required
-                    />
-                    <PasswordInput
-                      label="Confirm New Password"
-                      placeholder="Confirm your new password"
-                      {...passwordForm.getInputProps("confirmPassword")}
-                      required
-                    />
-                    <Group justify="flex-end">
-                      <Button type="submit" loading={passwordLoading}>
-                        Update Password
-                      </Button>
-                    </Group>
-                  </Stack>
-                </form>
-              </Card>
-
-              <Card withBorder shadow="sm" p="lg" radius="md" mb="md">
-                <Title order={3} mb="md">Notifications</Title>
-                <Text mb="md">
-                  You will only be notified regarding updates to your activities
-                </Text>
-                <form onSubmit={notificationForm.onSubmit(updateNotifications)}>
-                  <Stack>
-                    <Select
-                      label="Browser Notifications"
-                      placeholder="Select notification preference"
-                      data={[
-                        { value: "true", label: "Enabled" },
-                        { value: "false", label: "Disabled" },
-                      ]}
-                      disabled={notificationLoading}
-                      value={notificationForm.values.browserNotifications
-                        .toString()}
-                      onChange={(value) =>
-                        notificationForm.setFieldValue(
-                          "browserNotifications",
-                          value || "false",
-                        )}
-                    />
-                    <Select
-                      label="Email Notifications"
-                      placeholder="Select notification preference"
-                      data={[
-                        { value: "true", label: "Enabled" },
-                        { value: "false", label: "Disabled" },
-                      ]}
-                      disabled={notificationLoading}
-                      value={notificationForm.values.emailNotifications
-                        .toString()}
-                      onChange={(value) =>
-                        notificationForm.setFieldValue(
-                          "emailNotifications",
-                          value || "false",
-                        )}
-                    />
-                    <Group justify="flex-end">
-                      <Button
-                        type="submit"
-                        loading={loading || notificationLoading}
-                      >
-                        Save Preferences
-                      </Button>
-                    </Group>
-                  </Stack>
-                </form>
-              </Card>
-
-              <Card withBorder shadow="sm" p="lg" radius="md" mb="md">
-                <Title order={3} mb="md">Export Data</Title>
-                <Text mb="md">Download a copy of your data</Text>
-                <Button leftSection={<IconDownload size={16} />} disabled>
-                  Export Data (Coming Soon)
-                </Button>
-              </Card>
-
-              <Card
-                withBorder
-                shadow="sm"
-                p="lg"
-                radius="md"
-                mb="md"
-                bg="rgba(255, 0, 0, 0.03)"
-              >
-                <Title order={3} mb="md" c="red">Danger Zone</Title>
-                <Text mb="md">
-                  Once you delete your account, there is no going back. Please
-                  be certain.
-                </Text>
-                <Button
-                  leftSection={<IconTrash size={16} />}
-                  color="red"
-                  variant="outline"
-                  onClick={open}
-                >
-                  Delete Account
-                </Button>
-              </Card>
-
-              <Modal
-                opened={opened}
-                onClose={close}
-                title="Delete Account"
-                centered
-              >
+        {active === "General" && (
+          <Stack>
+            <Title order={2} mb="md">General Settings</Title>
+            <Card withBorder shadow="sm" p="lg" radius="md" mb="md">
+              <Title order={3} mb="sm">Profile Information</Title>
+              <form onSubmit={profileForm.onSubmit(updateProfile)}>
                 <Stack>
-                  <Text>
-                    Are you sure you want to delete your account? This action is
-                    irreversible.
-                  </Text>
-                  <Group justify="flex-end" mt="md">
-                    <Button variant="default" onClick={close}>Cancel</Button>
-                    <Button
-                      color="red"
-                      onClick={deleteAccount}
-                      loading={loading}
-                    >
-                      Delete Account
+                  <TextInput
+                    label="Name"
+                    placeholder="Your name"
+                    {...profileForm.getInputProps("name")}
+                    required
+                    disabled={loading}
+                  />
+                  <TextInput
+                    label="Email"
+                    placeholder="Your email"
+                    {...profileForm.getInputProps("email")}
+                    required
+                    disabled={loading}
+                  />
+                  <Group justify="flex-end" mt="sm">
+                    <Button type="submit" loading={loading}>
+                      Save Changes
                     </Button>
                   </Group>
                 </Stack>
-              </Modal>
-              <Footer />
-            </Stack>
-          )
-          : (
-            <Stack>
-              <Title order={2} mb="md">Appearance Settings</Title>
+              </form>
+            </Card>
+            <Card withBorder shadow="sm" p="lg" radius="md" mb="md">
+              <Title order={3} mb="sm">Export Data</Title>
+              <Text size="sm" c="dimmed" mb="md">Download a copy of your data.</Text>
+              <Button leftSection={<IconDownload size={16} />} disabled>
+                Export Data (Coming Soon)
+              </Button>
+            </Card>
+            <Footer />
+          </Stack>
+        )}
 
-              <Card withBorder shadow="sm" p="lg" radius="md" mb="md">
-                <Title order={3} mb="md">Theme</Title>
+        {active === "Security" && (
+          <Stack>
+            <Title order={2} mb="md">Security Settings</Title>
+            <Card withBorder shadow="sm" p="lg" radius="md" mb="md">
+              <Title order={3} mb="sm">Change Password</Title>
+              <form onSubmit={passwordForm.onSubmit(updatePassword)}>
                 <Stack>
-                  <Text mb="md">Choose your preferred theme mode</Text>
-                  <SegmentedControl
-                    value={colorScheme}
-                    onChange={(value) =>
-                      setColorScheme(value as MantineColorScheme)}
-                    data={[
-                      {
-                        value: "light",
-                        label: (
-                          <Center style={{ gap: 10 }}>
-                            <IconSun size={16} stroke={1.5} />
-                            <span>Light</span>
-                          </Center>
-                        ),
-                      },
-                      {
-                        value: "dark",
-                        label: (
-                          <Center style={{ gap: 10 }}>
-                            <IconMoon size={16} stroke={1.5} />
-                            <span>Dark</span>
-                          </Center>
-                        ),
-                      },
-                      {
-                        value: "auto",
-                        label: (
-                          <Center style={{ gap: 10 }}>
-                            <IconSun size={16} stroke={1.5} />/<IconMoon
-                              size={16}
-                              stroke={1.5}
-                            />
-                            <span>Auto</span>
-                          </Center>
-                        ),
-                      },
-                    ]}
+                  <PasswordInput
+                    label="Current Password"
+                    placeholder="Enter your current password"
+                    {...passwordForm.getInputProps("currentPassword")}
+                    required
+                    disabled={passwordLoading}
                   />
+                  <PasswordInput
+                    label="New Password"
+                    placeholder="Enter your new password"
+                    {...passwordForm.getInputProps("newPassword")}
+                    required
+                    disabled={passwordLoading}
+                  />
+                  <PasswordInput
+                    label="Confirm New Password"
+                    placeholder="Confirm your new password"
+                    {...passwordForm.getInputProps("confirmPassword")}
+                    required
+                    disabled={passwordLoading}
+                  />
+                  <Group justify="flex-end" mt="sm">
+                    <Button type="submit" loading={passwordLoading}>
+                      Update Password
+                    </Button>
+                  </Group>
                 </Stack>
-              </Card>
+              </form>
+            </Card>
+            <Footer />
+          </Stack>
+        )}
 
-              <Card withBorder shadow="sm" p="lg" radius="md">
-                <Title order={3} mb="md">Language</Title>
+        {active === "Notifications" && (
+          <Stack>
+            <Title order={2} mb="md">Notification Settings</Title>
+            <Card withBorder shadow="sm" p="lg" radius="md" mb="md">
+              <Title order={3} mb="sm">Preferences</Title>
+              <Text size="sm" c="dimmed" mb="md">
+                Choose how you receive notifications about your activities.
+              </Text>
+              <form onSubmit={notificationForm.onSubmit(updateNotifications)}>
                 <Stack>
-                  <Text mb="md">Select your preferred language</Text>
                   <Select
+                    label="Browser Notifications"
+                    placeholder="Select preference"
                     data={[
-                      { value: "en", label: "English" },
-                      { value: "fr", label: "Français" },
+                      { value: "true", label: "Enabled" },
+                      { value: "false", label: "Disabled" },
                     ]}
-                    defaultValue="en"
-                    leftSection={<IconLanguage size={16} />}
-                    disabled
-                    label="Language (Coming Soon)"
+                    {...notificationForm.getInputProps("browserNotifications")}
+                    disabled={notificationLoading}
                   />
+                  <Select
+                    label="Email Notifications"
+                    placeholder="Select preference"
+                    data={[
+                      { value: "true", label: "Enabled" },
+                      { value: "false", label: "Disabled" },
+                    ]}
+                    {...notificationForm.getInputProps("emailNotifications")}
+                    disabled={notificationLoading}
+                  />
+                  <Group justify="flex-end" mt="sm">
+                    <Button
+                      type="submit"
+                      loading={notificationLoading}
+                    >
+                      Save Preferences
+                    </Button>
+                  </Group>
                 </Stack>
-              </Card>
-              <Footer />
-            </Stack>
-          )}
+              </form>
+            </Card>
+            <Footer />
+          </Stack>
+        )}
+
+        {active === "Appearance" && (
+          <Stack>
+            <Title order={2} mb="md">Appearance Settings</Title>
+            <Card withBorder shadow="sm" p="lg" radius="md" mb="md">
+              <Title order={3} mb="sm">Theme</Title>
+              <Stack>
+                <Text size="sm" c="dimmed" mb="md">Choose your preferred theme mode.</Text>
+                <SegmentedControl
+                  value={colorScheme}
+                  onChange={(value) =>
+                    setColorScheme(value as MantineColorScheme)}
+                  data={[
+                    {
+                      value: "light",
+                      label: (
+                        <Center style={{ gap: 10 }}>
+                          <IconSun size={16} stroke={1.5} />
+                          <span>Light</span>
+                        </Center>
+                      ),
+                    },
+                    {
+                      value: "dark",
+                      label: (
+                        <Center style={{ gap: 10 }}>
+                          <IconMoon size={16} stroke={1.5} />
+                          <span>Dark</span>
+                        </Center>
+                      ),
+                    },
+                    {
+                      value: "auto",
+                      label: (
+                        <Center style={{ gap: 10 }}>
+                          <IconSun size={16} stroke={1.5} />/<IconMoon
+                            size={16}
+                            stroke={1.5}
+                          />
+                          <span>Auto</span>
+                        </Center>
+                      ),
+                    },
+                  ]}
+                />
+              </Stack>
+            </Card>
+            <Card withBorder shadow="sm" p="lg" radius="md">
+              <Title order={3} mb="sm">Language</Title>
+              <Stack>
+                <Text size="sm" c="dimmed" mb="md">Select your preferred language.</Text>
+                <Select
+                  data={[
+                    { value: "en", label: "English" },
+                  ]}
+                  defaultValue="en"
+                  leftSection={<IconLanguage size={16} />}
+                  disabled
+                  label="Language (Coming Soon)"
+                />
+              </Stack>
+            </Card>
+            <Footer />
+          </Stack>
+        )}
+
+        {active === "Delete Account" && (
+          <Stack>
+            <Title order={2} mb="md">Delete Account</Title>
+            <Card
+              withBorder
+              shadow="sm"
+              p="lg"
+              radius="md"
+              mb="md"
+              bg="rgba(255, 0, 0, 0.03)"
+            >
+              <Title order={3} mb="sm" c="red">Danger Zone</Title>
+              <Text size="sm" c="dimmed" mb="md">
+                Once you delete your account, there is no going back. All your data will be permanently lost. Please be certain.
+              </Text>
+              <Button
+                leftSection={<IconTrash size={16} />}
+                color="red"
+                variant="filled"
+                onClick={open}
+                loading={loading}
+              >
+                Delete My Account
+              </Button>
+            </Card>
+            <Modal
+              opened={opened}
+              onClose={close}
+              title="Confirm Account Deletion"
+              centered
+            >
+              <Stack>
+                {error && (
+                  <Alert color="red" title="Error" icon={<IconExclamationCircle />}>
+                    {error}
+                  </Alert>
+                )}
+                <Text size="sm">
+                  Are you absolutely sure you want to delete your account? This action cannot be undone.
+                </Text>
+                <Group justify="flex-end" mt="md">
+                  <Button variant="default" onClick={close} disabled={loading}>Cancel</Button>
+                  <Button
+                    color="red"
+                    onClick={deleteAccount}
+                    loading={loading}
+                  >
+                    Yes, Delete My Account
+                  </Button>
+                </Group>
+              </Stack>
+            </Modal>
+            <Footer />
+          </Stack>
+        )}
       </div>
     </div>
   );

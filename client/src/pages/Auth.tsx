@@ -22,8 +22,7 @@ import {
 } from "@tabler/icons-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useForm } from "@mantine/form";
-import axios from "axios";
-import { authClient } from "../lib/auth-client"; //import the auth client
+import { authClient } from "../lib/client"; //import the auth client
 
 function PasswordRequirementLabel(
   { check, label }: { check: boolean; label: string },
@@ -42,29 +41,31 @@ export default function Auth() {
   const navigate = useNavigate();
   let location = useLocation();
   const [selected, setSelected] = useState("login");
-  const serverUrl = import.meta.env.VITE_SERVER_URL;
-
-  // If the user is authenticated, redirect to login page; also checks if the backend is offline
 
   const {
     data: session,
-    isPending, //loading state
-    error, //error object
-    refetch, //refetch the session
+    isPending: loadingSession,
+    error: sessionError,
   } = authClient.useSession();
-  if (error) {
-    window.alert("An unexpected error occurred. Please try again later.");
-  }
-  if (session?.user) {
-    navigate("/");
-  }
+
+  useEffect(() => {
+    if (sessionError) {
+      window.alert(
+        "An unexpected error occurred checking session. Please try again later.",
+      );
+    }
+    if (!loadingSession && session?.user) {
+      navigate("/");
+    } else{
+      // If session is loading or no user, do nothing
+    }
+  }, [session, loadingSession, sessionError, navigate]);
 
   useEffect(() => {
     if (location.pathname === "/login") setSelected("login");
     else setSelected("signup");
   }, [location]);
 
-  // Handles the navigation between login and signup
   const handleNavChange = (value: string) => {
     setSelected(value);
     if (value === "login") navigate("/login");
@@ -72,7 +73,6 @@ export default function Auth() {
     setErrorMessage("");
   };
 
-  // Initialization for login form
   const loginForm = useForm({
     initialValues: {
       email: "",
@@ -94,10 +94,8 @@ export default function Auth() {
     },
   });
 
-  // Initialization for signup form
   const signupForm = useForm({
     initialValues: {
-      accountType: "",
       email: "",
       name: "",
       password: "",
@@ -119,9 +117,10 @@ export default function Auth() {
         : "Password does not meet the requirements"),
       confirmPassword: (
         val: string,
+        values,
       ):
         | string
-        | null => (val === signupForm.values.password
+        | null => (val === values.password
           ? null
           : "Passwords do not match"),
     },
@@ -147,7 +146,6 @@ export default function Auth() {
     },
   ];
 
-  // Auto-fills the name field based on the TDSB email entered
   const setName = (email: string) => {
     if (/^\S+\.+\S+@(student\.)?tdsb\.on\.ca+$/.test(email)) {
       if (/^\d+$/.test(email.split("@")[0].split(".").join(" ").slice(-1))) {
@@ -169,17 +167,6 @@ export default function Auth() {
     else signupForm.setFieldValue("name", "Invalid Email Entered");
   };
 
-  const setEmail = (email: string) => {
-    if (/^\S+\.+\S+@tdsb\.on\.ca+$/.test(email)) {
-      signupForm.setFieldValue("accountType", "TEACHER");
-    } else if (/^\S+\.+\S+@student\.tdsb\.on\.ca+$/.test(email)) {
-      signupForm.setFieldValue("accountType", "STUDENT");
-    } else {
-      signupForm.setFieldValue("accountType", "");
-    }
-    signupForm.setFieldValue("email", email);
-  };
-
   const setAvatar = (name: string) => {
     if (name === "") {
       return <Avatar color="gray" size={30}>?</Avatar>;
@@ -195,7 +182,6 @@ export default function Auth() {
   };
 
   interface signupUser {
-    accountType: "TEACHER" | "STUDENT";
     email: string;
     name: string;
     password: string;
@@ -206,38 +192,52 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
 
   const signupUser = async (values: signupUser) => {
+    setLoading(true);
+    setErrorMessage("");
     const { data, error } = await authClient.signUp.email({
-      email: values.email, // user email address
-      password: values.password, // user password -> min 8 characters by default
-      name: values.name, // user display name
-      callbackURL: "/", // a url to redirect to after the user verifies their email (optional)
-    }, {
-      onRequest: (ctx) => {
-        setLoading(true);
-      },
-      onSuccess: (ctx) => {
-        console.log(ctx);
-      },
-      onError: (ctx) => {
-        // display the error message
-        console.error(ctx.error.message);
-        setErrorMessage(ctx.error.message);
-      },
+      email: values.email,
+      password: values.password,
+      name: values.name,
+      callbackURL: "/",
+      
     });
-    console.log(data, error);
+
+    setLoading(false);
+    if (error) {
+      console.error(error.message);
+      setErrorMessage(error.message || "Signup failed. Please try again.");
+    } else if (data) {
+      console.log("Signup successful:", data);
+    }
   };
 
   const loginUser = async (values: { email: string; password: string }) => {
-    await authClient.signIn.email({
+    setLoading(true);
+    setErrorMessage("");
+    const { data, error } = await authClient.signIn.email({
       email: values.email,
       password: values.password,
-    }, {
-      onError(ctx) {
-        console.error(ctx.error.message);
-        setErrorMessage(ctx.error.message);
-      },
     });
+
+    setLoading(false);
+    if (error) {
+      console.error(error.message);
+      setErrorMessage(
+        error.message || "Login failed. Please check your credentials.",
+      );
+    } else if (data) {
+      console.log("Login successful:", data);
+      navigate("/");
+    }
   };
+
+  if (loadingSession) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <Loader />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-row max-h-screen">
@@ -305,13 +305,8 @@ export default function Auth() {
                     required
                     size="md"
                     mt="md"
-                    value={loginForm.values.email}
-                    onChange={(event) =>
-                      loginForm.setFieldValue(
-                        "email",
-                        event.currentTarget.value.trim(),
-                      )}
-                    error={loginForm.errors.email && "Invalid email entered"}
+                    {...loginForm.getInputProps("email")}
+                    error={loginForm.errors.email}
                     rightSectionPointerEvents="none"
                     rightSection={<IconUser className="size-5" />}
                     label="Email"
@@ -319,14 +314,8 @@ export default function Auth() {
                   />
                   <PasswordInput
                     required
-                    value={loginForm.values.password}
-                    onChange={(event) =>
-                      loginForm.setFieldValue(
-                        "password",
-                        event.currentTarget.value,
-                      )}
-                    error={loginForm.errors.password &&
-                      "Password does not meet the requirements"}
+                    {...loginForm.getInputProps("password")}
+                    error={loginForm.errors.password}
                     size="md"
                     label="Password"
                     placeholder="Enter your password"
@@ -365,25 +354,23 @@ export default function Auth() {
                     required
                     size="md"
                     mt="md"
-                    value={signupForm.values.email}
-                    onChange={(event) =>
-                      setEmail(event.currentTarget.value.trim())}
-                    error={signupForm.errors.email && "Invalid email entered"}
+                    {...signupForm.getInputProps("email")}
+                    onChange={(event) => {
+                      const emailValue = event.currentTarget.value.trim();
+                      signupForm.setFieldValue("email", emailValue);
+                      setName(emailValue);
+                    }}
+                    error={signupForm.errors.email}
                     rightSectionPointerEvents="none"
                     rightSection={<IconSchool className="size-5" />}
                     label="School Email"
                     placeholder="Your email"
-                    onBlur={(e) => setName(e.target.value.trim())}
                   />
                   <TextInput
                     required
                     size="md"
-                    value={signupForm.values.name}
-                    onChange={(event) =>
-                      signupForm.setFieldValue(
-                        "name",
-                        event.currentTarget.value,
-                      )}
+                    {...signupForm.getInputProps("name")}
+                    readOnly
                     rightSection={setAvatar(signupForm.values.name.trim())}
                     label="Your Name"
                     description="This field is auto-filled based on your email."
@@ -391,14 +378,8 @@ export default function Auth() {
                   />
                   <PasswordInput
                     required
-                    value={signupForm.values.password}
-                    onChange={(event) =>
-                      signupForm.setFieldValue(
-                        "password",
-                        event.currentTarget.value,
-                      )}
-                    error={signupForm.errors.password &&
-                      "Password does not meet the requirements"}
+                    {...signupForm.getInputProps("password")}
+                    error={signupForm.errors.password}
                     size="md"
                     label="Password"
                     placeholder="Enter your password"
@@ -416,25 +397,14 @@ export default function Auth() {
 
                   <PasswordInput
                     required
-                    value={signupForm.values.confirmPassword}
-                    onChange={(event) =>
-                      signupForm.setFieldValue(
-                        "confirmPassword",
-                        event.currentTarget.value,
-                      )}
-                    error={signupForm.errors.confirmPassword &&
-                      "Passwords do not match"}
+                    {...signupForm.getInputProps("confirmPassword")}
+                    error={signupForm.errors.confirmPassword}
                     size="md"
                     label="Confirm Password"
                     placeholder="Confirm your password"
                   />
                   <Button
                     type="submit"
-                    onClick={() =>
-                      signupForm.setFieldValue(
-                        "name",
-                        signupForm.values.name.trim(),
-                      )}
                     fullWidth
                     size="md"
                     variant="filled"

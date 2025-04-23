@@ -18,8 +18,8 @@ import {
   IconSun,
 } from "@tabler/icons-react";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
-import { User } from "../types";
+import { User } from "better-auth/types";
+import { authClient } from "../lib/client";
 
 interface NavbarProps {
   user: User | undefined;
@@ -31,23 +31,20 @@ export default function Navbar({ user }: NavbarProps) {
   const computedColorScheme = useComputedColorScheme("light", {
     getInitialValueInEffect: true,
   });
-  const serverUrl = import.meta.env.VITE_SERVER_URL;
 
   const logout = async () => {
+
     try {
-      const res = await axios.post(serverUrl + "/user/logout", {}, {
-        withCredentials: true,
+      await authClient.signOut({
+        fetchOptions: {
+          onSuccess: () => {
+            navigate("/login");
+          },
+        },
       });
-      if (res.status === 204) navigate("/login");
-      else {window.alert(
-          "An unexpected error occurred. Please try again later.",
-        );}
-    } catch (err) {
-      if (axios.isAxiosError(err) && err.response) {
-        alert("Logout failed:" + err.response.data);
-      } else {window.alert(
-          "An unexpected error occurred. Please try again later.",
-        );}
+    } catch (err: any) {
+      console.error("Logout error:", err);
+
     }
   };
   return (

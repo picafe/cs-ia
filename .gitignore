@@ -1,1 +1,3 @@
 node_modules
+backend/tests
+backend/prisma/seed.ts

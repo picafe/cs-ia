@@ -9,9 +9,12 @@
     }
   ],
   "compilerOptions": {
+    "composite": true,
     "baseUrl": ".",
     "paths": {
-      "@lib/*": ["./src/lib/*"]
+      "@lib/*": ["./src/lib/*"],
+      "@/*": ["./src/*"],
+      "~/*": ["./*"]
     },
     "strict": true
   }
