@@ -56,7 +56,7 @@ export default function Auth() {
     }
     if (!loadingSession && session?.user) {
       navigate("/");
-    } else{
+    } else {
       // If session is loading or no user, do nothing
     }
   }, [session, loadingSession, sessionError, navigate]);
@@ -120,9 +120,7 @@ export default function Auth() {
         values,
       ):
         | string
-        | null => (val === values.password
-          ? null
-          : "Passwords do not match"),
+        | null => (val === values.password ? null : "Passwords do not match"),
     },
   });
 
@@ -199,7 +197,6 @@ export default function Auth() {
       password: values.password,
       name: values.name,
       callbackURL: "/",
-      
     });
 
     setLoading(false);

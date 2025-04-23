@@ -2,7 +2,7 @@ import { Loader } from "@mantine/core";
 import { useEffect } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import { authClient } from "./lib/client"; // Import authClient
-import type { InferResponseType } from 'hono/client'
+import type { InferResponseType } from "hono/client";
 import type { User } from "better-auth/types";
 function BaseApp() {
   const navigate = useNavigate();
@@ -29,7 +29,7 @@ function BaseApp() {
   } else if (!loading && !session?.user) {
     navigate("/login");
   } else if (session) {
-    user = session.user
+    user = session.user;
   }
 
   return (

@@ -5,9 +5,11 @@ import Logo from "../icons/Logo";
 import { IconExclamationCircle } from "@tabler/icons-react";
 import { useNavigate } from "react-router-dom";
 import { client } from "../lib/client";
-import type { InferRequestType, InferResponseType } from 'hono/client';
+import type { InferRequestType, InferResponseType } from "hono/client";
 
-type JoinClassFormValues = InferRequestType<typeof client.class.join.$post>['json'];
+type JoinClassFormValues = InferRequestType<
+  typeof client.class.join.$post
+>["json"];
 
 export default function JoinClass() {
   const [errorMessage, setErrorMessage] = useState("");
@@ -19,7 +21,11 @@ export default function JoinClass() {
       code: "",
     },
     validate: {
-      code: (value) => (value.trim().length === 6 ? null : "Class code must be 6 characters"),
+      code: (
+        value,
+      ) => (value.trim().length === 6
+        ? null
+        : "Class code must be 6 characters"),
     },
   });
 
@@ -42,7 +48,9 @@ export default function JoinClass() {
       }
     } catch (err: any) {
       console.error("Join class error:", err);
-      setErrorMessage(err.message || "Something unexpected happened! Please contact support.");
+      setErrorMessage(
+        err.message || "Something unexpected happened! Please contact support.",
+      );
     } finally {
       setLoading(false);
     }
@@ -60,7 +68,9 @@ export default function JoinClass() {
               </span>
             </h1>
           </div>
-          <h1 className="text-3xl font-semibold mt-8 mb-4 text-center">Join a Class</h1>
+          <h1 className="text-3xl font-semibold mt-8 mb-4 text-center">
+            Join a Class
+          </h1>
           {errorMessage && (
             <Alert
               variant="light"

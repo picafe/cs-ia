@@ -31,7 +31,7 @@ function App() {
   } else if (!loading && !session?.user) {
     navigate("/login");
   } else if (session) {
-    user = session.user
+    user = session.user;
   }
 
   // Only render the main application when we have a user

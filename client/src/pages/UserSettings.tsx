@@ -1,18 +1,18 @@
 import { useEffect, useState } from "react";
 import {
-  IconCheck,
-  IconExclamationCircle,
-  IconLock,
-  IconUserCircle,
   IconBell,
+  IconCheck,
   IconDownload,
+  IconExclamationCircle,
   IconLanguage,
+  IconLock,
+  IconLogout,
   IconMoon,
-  IconSun,
   IconPalette,
   IconSettings,
+  IconSun,
   IconTrash,
-  IconLogout,
+  IconUserCircle,
 } from "@tabler/icons-react";
 import {
   ActionIcon,
@@ -41,7 +41,7 @@ import { User } from "../types";
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import Footer from "../components/Footer";
-import { client, authClient } from "../lib/client";
+import { authClient, client } from "../lib/client";
 
 const data = [
   { label: "General", icon: IconSettings },
@@ -272,7 +272,9 @@ export default function UserSettings() {
       if (data.success) {
         setSuccess("Notification preferences updated successfully");
       } else {
-        throw new Error(data.error || "Failed to update notification preferences");
+        throw new Error(
+          data.error || "Failed to update notification preferences",
+        );
       }
     } catch (err: any) {
       console.error("Notification update error:", err);
@@ -354,13 +356,20 @@ export default function UserSettings() {
             <Avatar color="cyan" radius="xl" size={28}>
               {user?.name?.split(" ").map((word) =>
                 word.charAt(0).toUpperCase()
-              ).join('')}
+              ).join("")}
             </Avatar>
             <Text fw={500} visibleFrom="sm" size="sm" lh={1} mr={2}>
               {user?.name}
             </Text>
           </Group>
-          <a href="#" className={classes.link} onClick={(e) => { e.preventDefault(); logout(); }}>
+          <a
+            href="#"
+            className={classes.link}
+            onClick={(e) => {
+              e.preventDefault();
+              logout();
+            }}
+          >
             <IconLogout className={classes.linkIcon} stroke={1.5} />
             <span>Logout</span>
           </a>
@@ -425,7 +434,9 @@ export default function UserSettings() {
             </Card>
             <Card withBorder shadow="sm" p="lg" radius="md" mb="md">
               <Title order={3} mb="sm">Export Data</Title>
-              <Text size="sm" c="dimmed" mb="md">Download a copy of your data.</Text>
+              <Text size="sm" c="dimmed" mb="md">
+                Download a copy of your data.
+              </Text>
               <Button leftSection={<IconDownload size={16} />} disabled>
                 Export Data (Coming Soon)
               </Button>
@@ -525,7 +536,9 @@ export default function UserSettings() {
             <Card withBorder shadow="sm" p="lg" radius="md" mb="md">
               <Title order={3} mb="sm">Theme</Title>
               <Stack>
-                <Text size="sm" c="dimmed" mb="md">Choose your preferred theme mode.</Text>
+                <Text size="sm" c="dimmed" mb="md">
+                  Choose your preferred theme mode.
+                </Text>
                 <SegmentedControl
                   value={colorScheme}
                   onChange={(value) =>
@@ -568,7 +581,9 @@ export default function UserSettings() {
             <Card withBorder shadow="sm" p="lg" radius="md">
               <Title order={3} mb="sm">Language</Title>
               <Stack>
-                <Text size="sm" c="dimmed" mb="md">Select your preferred language.</Text>
+                <Text size="sm" c="dimmed" mb="md">
+                  Select your preferred language.
+                </Text>
                 <Select
                   data={[
                     { value: "en", label: "English" },
@@ -597,7 +612,8 @@ export default function UserSettings() {
             >
               <Title order={3} mb="sm" c="red">Danger Zone</Title>
               <Text size="sm" c="dimmed" mb="md">
-                Once you delete your account, there is no going back. All your data will be permanently lost. Please be certain.
+                Once you delete your account, there is no going back. All your
+                data will be permanently lost. Please be certain.
               </Text>
               <Button
                 leftSection={<IconTrash size={16} />}
@@ -617,15 +633,22 @@ export default function UserSettings() {
             >
               <Stack>
                 {error && (
-                  <Alert color="red" title="Error" icon={<IconExclamationCircle />}>
+                  <Alert
+                    color="red"
+                    title="Error"
+                    icon={<IconExclamationCircle />}
+                  >
                     {error}
                   </Alert>
                 )}
                 <Text size="sm">
-                  Are you absolutely sure you want to delete your account? This action cannot be undone.
+                  Are you absolutely sure you want to delete your account? This
+                  action cannot be undone.
                 </Text>
                 <Group justify="flex-end" mt="md">
-                  <Button variant="default" onClick={close} disabled={loading}>Cancel</Button>
+                  <Button variant="default" onClick={close} disabled={loading}>
+                    Cancel
+                  </Button>
                   <Button
                     color="red"
                     onClick={deleteAccount}

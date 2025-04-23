@@ -57,8 +57,12 @@
 .mainLinkActive {
   &,
   &:hover {
-    background-color: var(--mantine-color-blue-light); /* Or your theme's primary light color */
-    color: var(--mantine-color-blue-light-color); /* Or your theme's primary light text color */
+    background-color: var(
+      --mantine-color-blue-light
+    ); /* Or your theme's primary light color */
+    color: var(
+      --mantine-color-blue-light-color
+    ); /* Or your theme's primary light text color */
   }
 }
 

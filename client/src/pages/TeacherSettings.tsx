@@ -1,13 +1,13 @@
 import {
-  UnstyledButton,
-  Badge,
-  Text,
-  Group,
   ActionIcon,
-  Tooltip,
-  rem,
-  Loader,
+  Badge,
   Button,
+  Group,
+  Loader,
+  rem,
+  Text,
+  Tooltip,
+  UnstyledButton,
 } from "@mantine/core";
 import {
   IconBulb,
@@ -46,7 +46,8 @@ function ClassDetailsView({ onRefresh }: { onRefresh: () => void }) {
   const { classId } = useParams<{ classId: string }>();
   return (
     <div>
-      Details for Class ID: {classId} <Button onClick={onRefresh}>Refresh List</Button>
+      Details for Class ID: {classId}{" "}
+      <Button onClick={onRefresh}>Refresh List</Button>
     </div>
   );
 }
@@ -55,7 +56,8 @@ function StudentEditView({ onRefresh }: { onRefresh: () => void }) {
   const { studentId } = useParams<{ studentId: string }>();
   return (
     <div>
-      Editing Student ID: {studentId} <Button onClick={onRefresh}>Refresh List</Button>
+      Editing Student ID: {studentId}{" "}
+      <Button onClick={onRefresh}>Refresh List</Button>
     </div>
   );
 }

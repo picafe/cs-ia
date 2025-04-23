@@ -33,7 +33,6 @@ export default function Navbar({ user }: NavbarProps) {
   });
 
   const logout = async () => {
-
     try {
       await authClient.signOut({
         fetchOptions: {
@@ -44,7 +43,6 @@ export default function Navbar({ user }: NavbarProps) {
       });
     } catch (err: any) {
       console.error("Logout error:", err);
-
     }
   };
   return (

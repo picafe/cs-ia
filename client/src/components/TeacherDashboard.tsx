@@ -1,30 +1,29 @@
 import {
-  Container,
-  Grid,
-  Text,
-  Paper,
-  Group,
-  RingProgress,
-  Card,
-  Stack,
   Avatar,
   Badge,
-  Table,
-  ScrollArea,
   Button,
-  Tabs,
+  Card,
+  Container,
+  Grid,
+  Group,
   Loader,
+  Paper,
+  RingProgress,
+  ScrollArea,
+  Stack,
+  Table,
+  Tabs,
+  Text,
 } from "@mantine/core";
 import {
+  IconHome,
+  IconSettings,
   IconUserPlus,
   IconUsers,
-  IconSettings,
-  IconHome,
 } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { client } from "../lib/client";
-
 
 type StudentDashboardSummary = {
   id: number;
@@ -60,13 +59,13 @@ type TeacherDashboardData = {
 };
 
 export default function TeacherDashboard() {
-  const [dashboardData, setDashboardData] = useState<TeacherDashboardData | null>(null);
+  const [dashboardData, setDashboardData] = useState<
+    TeacherDashboardData | null
+  >(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<string | null>("home");
-
-
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -77,7 +76,9 @@ export default function TeacherDashboard() {
 
         if (!res.ok) {
           const errorData = await res.json();
-          throw new Error(errorData.error || `HTTP error! status: ${res.status}`);
+          throw new Error(
+            errorData.error || `HTTP error! status: ${res.status}`,
+          );
         }
 
         const data = await res.json();
@@ -88,7 +89,9 @@ export default function TeacherDashboard() {
         }
       } catch (err: any) {
         console.error("Dashboard fetch error:", err);
-        setError(err.message || "Failed to load dashboard data. Please try again.");
+        setError(
+          err.message || "Failed to load dashboard data. Please try again.",
+        );
         setDashboardData(null);
       } finally {
         setLoading(false);
@@ -188,7 +191,14 @@ export default function TeacherDashboard() {
       </Tabs>
 
       {dashboardData.classes.map((classStats) => (
-        <Paper key={classStats.id} p="md" shadow="sm" radius="md" withBorder mb="xl">
+        <Paper
+          key={classStats.id}
+          p="md"
+          shadow="sm"
+          radius="md"
+          withBorder
+          mb="xl"
+        >
           <Stack>
             <Group justify="space-between" align="center">
               <div>
@@ -211,7 +221,12 @@ export default function TeacherDashboard() {
 
             <Grid gutter="md">
               <Grid.Col span={{ base: 12, md: 4 }}>
-                <Card p="md" radius="md" withBorder className={classes.cardHeight}>
+                <Card
+                  p="md"
+                  radius="md"
+                  withBorder
+                  className={classes.cardHeight}
+                >
                   <Stack align="center" justify="center" h="100%">
                     <Text fw={500} c="dimmed" mb="xs">
                       Class Status Overview
@@ -222,17 +237,21 @@ export default function TeacherDashboard() {
                       roundCaps
                       sections={[
                         {
-                          value: (classStats.onTrackCount / classStats.totalStudents) * 100 || 0,
+                          value: (classStats.onTrackCount /
+                                classStats.totalStudents) * 100 || 0,
                           color: "green",
                           tooltip: `On Track: ${classStats.onTrackCount}`,
                         },
                         {
-                          value: (classStats.concernCount / classStats.totalStudents) * 100 || 0,
+                          value: (classStats.concernCount /
+                                classStats.totalStudents) * 100 || 0,
                           color: "orange",
                           tooltip: `Concern: ${classStats.concernCount}`,
                         },
                         {
-                          value: (classStats.alertCount / classStats.totalStudents) * 100 || 0,
+                          value:
+                            (classStats.alertCount / classStats.totalStudents) *
+                              100 || 0,
                           color: "red",
                           tooltip: `Alert: ${classStats.alertCount}`,
                         },
@@ -253,39 +272,49 @@ export default function TeacherDashboard() {
               </Grid.Col>
 
               <Grid.Col span={{ base: 12, md: 8 }}>
-                <Card p="md" radius="md" withBorder className={classes.cardHeight}>
+                <Card
+                  p="md"
+                  radius="md"
+                  withBorder
+                  className={classes.cardHeight}
+                >
                   <Stack h="100%">
                     <Text fw={500} c="dimmed" mb="xs">
                       Upcoming Due Dates
                     </Text>
-                    {classStats.dueDates.length > 0 ? (
-                      <ScrollArea style={{ flex: 1 }}>
-                        <Table verticalSpacing="xs" striped highlightOnHover>
-                          <Table.Thead>
-                            <Table.Tr>
-                              <Table.Th>Date</Table.Th>
-                              <Table.Th>Required Hours</Table.Th>
-                              <Table.Th>Students Completed</Table.Th>
-                            </Table.Tr>
-                          </Table.Thead>
-                          <Table.Tbody>
-                            {classStats.dueDates.map((dueDate, index) => (
-                              <Table.Tr key={index}>
-                                <Table.Td>{dueDate.date}</Table.Td>
-                                <Table.Td>{dueDate.required}</Table.Td>
-                                <Table.Td>
-                                  {dueDate.completed} / {classStats.totalStudents}
-                                </Table.Td>
+                    {classStats.dueDates.length > 0
+                      ? (
+                        <ScrollArea style={{ flex: 1 }}>
+                          <Table verticalSpacing="xs" striped highlightOnHover>
+                            <Table.Thead>
+                              <Table.Tr>
+                                <Table.Th>Date</Table.Th>
+                                <Table.Th>Required Hours</Table.Th>
+                                <Table.Th>Students Completed</Table.Th>
                               </Table.Tr>
-                            ))}
-                          </Table.Tbody>
-                        </Table>
-                      </ScrollArea>
-                    ) : (
-                      <Center style={{ flex: 1 }}>
-                        <Text c="dimmed">No due dates set for this class.</Text>
-                      </Center>
-                    )}
+                            </Table.Thead>
+                            <Table.Tbody>
+                              {classStats.dueDates.map((dueDate, index) => (
+                                <Table.Tr key={index}>
+                                  <Table.Td>{dueDate.date}</Table.Td>
+                                  <Table.Td>{dueDate.required}</Table.Td>
+                                  <Table.Td>
+                                    {dueDate.completed} /{" "}
+                                    {classStats.totalStudents}
+                                  </Table.Td>
+                                </Table.Tr>
+                              ))}
+                            </Table.Tbody>
+                          </Table>
+                        </ScrollArea>
+                      )
+                      : (
+                        <Center style={{ flex: 1 }}>
+                          <Text c="dimmed">
+                            No due dates set for this class.
+                          </Text>
+                        </Center>
+                      )}
                   </Stack>
                 </Card>
               </Grid.Col>
@@ -295,70 +324,74 @@ export default function TeacherDashboard() {
               <Text fw={500} c="dimmed" mb="xs">
                 Student Progress
               </Text>
-              {classStats.students.length > 0 ? (
-                <ScrollArea h={300}>
-                  <Table verticalSpacing="sm" striped highlightOnHover>
-                    <Table.Thead>
-                      <Table.Tr>
-                        <Table.Th>Student</Table.Th>
-                        <Table.Th>Status</Table.Th>
-                        <Table.Th>Total Hours</Table.Th>
-                        <Table.Th>Progress</Table.Th>
-                        <Table.Th>Actions</Table.Th>
-                      </Table.Tr>
-                    </Table.Thead>
-                    <Table.Tbody>
-                      {classStats.students.map((student) => (
-                        <Table.Tr key={student.id}>
-                          <Table.Td>
-                            <Group gap="sm">
-                              <Avatar size={26} radius={26}>
-                                {getInitials(student.name)}
-                              </Avatar>
-                              <Text size="sm" fw={500}>
-                                {student.name}
-                              </Text>
-                            </Group>
-                          </Table.Td>
-                          <Table.Td>
-                            <Badge
-                              color={
-                                student.status === "ALERT"
+              {classStats.students.length > 0
+                ? (
+                  <ScrollArea h={300}>
+                    <Table verticalSpacing="sm" striped highlightOnHover>
+                      <Table.Thead>
+                        <Table.Tr>
+                          <Table.Th>Student</Table.Th>
+                          <Table.Th>Status</Table.Th>
+                          <Table.Th>Total Hours</Table.Th>
+                          <Table.Th>Progress</Table.Th>
+                          <Table.Th>Actions</Table.Th>
+                        </Table.Tr>
+                      </Table.Thead>
+                      <Table.Tbody>
+                        {classStats.students.map((student) => (
+                          <Table.Tr key={student.id}>
+                            <Table.Td>
+                              <Group gap="sm">
+                                <Avatar size={26} radius={26}>
+                                  {getInitials(student.name)}
+                                </Avatar>
+                                <Text size="sm" fw={500}>
+                                  {student.name}
+                                </Text>
+                              </Group>
+                            </Table.Td>
+                            <Table.Td>
+                              <Badge
+                                color={student.status === "ALERT"
                                   ? "red"
                                   : student.status === "CONCERN"
                                   ? "orange"
                                   : student.status === "COMPLETED"
                                   ? "teal"
-                                  : "green"
-                              }
-                              variant="light"
-                            >
-                              {student.status.replace("_", " ")}
-                            </Badge>
-                          </Table.Td>
-                          <Table.Td>
-                            {student.totalHours.toFixed(1)} / {student.requiredHours}
-                          </Table.Td>
-                          <Table.Td>{student.progress}%</Table.Td>
-                          <Table.Td>
-                            <Button
-                              variant="subtle"
-                              size="xs"
-                              onClick={() => navigate(`/teacher/student/${student.id}`)}
-                            >
-                              View Details
-                            </Button>
-                          </Table.Td>
-                        </Table.Tr>
-                      ))}
-                    </Table.Tbody>
-                  </Table>
-                </ScrollArea>
-              ) : (
-                <Center h={100}>
-                  <Text c="dimmed">No students enrolled in this class yet.</Text>
-                </Center>
-              )}
+                                  : "green"}
+                                variant="light"
+                              >
+                                {student.status.replace("_", " ")}
+                              </Badge>
+                            </Table.Td>
+                            <Table.Td>
+                              {student.totalHours.toFixed(1)} /{" "}
+                              {student.requiredHours}
+                            </Table.Td>
+                            <Table.Td>{student.progress}%</Table.Td>
+                            <Table.Td>
+                              <Button
+                                variant="subtle"
+                                size="xs"
+                                onClick={() =>
+                                  navigate(`/teacher/student/${student.id}`)}
+                              >
+                                View Details
+                              </Button>
+                            </Table.Td>
+                          </Table.Tr>
+                        ))}
+                      </Table.Tbody>
+                    </Table>
+                  </ScrollArea>
+                )
+                : (
+                  <Center h={100}>
+                    <Text c="dimmed">
+                      No students enrolled in this class yet.
+                    </Text>
+                  </Center>
+                )}
             </Card>
           </Stack>
         </Paper>
